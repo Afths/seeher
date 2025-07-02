@@ -1,31 +1,43 @@
 import { useState, useEffect } from "react";
-import { useSuggestExpertise } from "@/hooks/useSuggestExpertise";
+import { Navigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSuggestExpertise } from "@/hooks/useSuggestExpertise";
 import { Tables } from "@/integrations/supabase/types";
-import { Link, Navigate } from "react-router-dom";
 
 type SubmissionType = Tables<"women">;
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const { isAdmin, loading: adminLoading } = useIsAdmin();
   const { toast } = useToast();
   const { suggestExpertise, isLoading: isGeneratingExpertise } = useSuggestExpertise();
   const [submissions, setSubmissions] = useState<SubmissionType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [showPasswordError, setShowPasswordError] = useState(false);
 
   useEffect(() => {
-    if (user && isAdmin) {
+    if (isAuthenticated) {
       fetchSubmissions();
     }
-  }, [user, isAdmin]);
+  }, [isAuthenticated]);
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === "beautywillsavetheworld") {
+      setIsAuthenticated(true);
+      setShowPasswordError(false);
+    } else {
+      setShowPasswordError(true);
+    }
+  };
 
   const fetchSubmissions = async () => {
     try {
@@ -123,20 +135,41 @@ export default function AdminDashboard() {
     return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
   };
 
-  if (adminLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   if (!user) {
     return <Navigate to="/" replace />;
   }
 
-  if (!isAdmin && !adminLoading) {
-    return <Navigate to="/" replace />;
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center">Admin Access</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div>
+                <Input
+                  type="password"
+                  placeholder="Enter admin password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  className="w-full"
+                />
+                {showPasswordError && (
+                  <p className="text-sm text-destructive mt-2">
+                    Incorrect password. Please try again.
+                  </p>
+                )}
+              </div>
+              <Button type="submit" className="w-full">
+                Access Admin Panel
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (

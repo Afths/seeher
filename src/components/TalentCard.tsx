@@ -74,7 +74,7 @@ export function TalentCard({
             <Avatar className="w-full h-full border-2 border-border/20">
               <AvatarImage src={profilePictureUrl} alt={name} className="object-cover" />
               <AvatarFallback 
-                className="text-2xl font-medium text-foreground/80"
+                className="text-2xl font-medium text-foreground/80 opacity-50"
                 style={{ backgroundColor: getPastelColor(name) }}
               >
                 {getInitials(name)}
