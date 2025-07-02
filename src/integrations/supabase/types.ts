@@ -17,8 +17,7 @@ export type Database = {
           consent: boolean
           contact_number: string | null
           created_at: string
-          email: string
-          file_upload_url: string | null
+          email: string | null
           id: string
           interested_in: string | null
           job_title: string | null
@@ -39,8 +38,7 @@ export type Database = {
           consent?: boolean
           contact_number?: string | null
           created_at?: string
-          email: string
-          file_upload_url?: string | null
+          email?: string | null
           id?: string
           interested_in?: string | null
           job_title?: string | null
@@ -61,8 +59,7 @@ export type Database = {
           consent?: boolean
           contact_number?: string | null
           created_at?: string
-          email?: string
-          file_upload_url?: string | null
+          email?: string | null
           id?: string
           interested_in?: string | null
           job_title?: string | null

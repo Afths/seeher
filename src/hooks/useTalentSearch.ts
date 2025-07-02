@@ -59,21 +59,9 @@ export function useTalentSearch() {
     try {
       let query = supabase.from("women").select("*");
       
-      // Filter by interested_in
+      // Filter by interested_in (currently string, will be array later)
       if (filters.interestedIn) {
         query = query.eq("interested_in", filters.interestedIn);
-      }
-      
-      // Text search across multiple fields
-      if (filters.searchTerm.trim()) {
-        const searchTerm = filters.searchTerm.trim();
-        query = query.or(
-          `long_bio.ilike.%${searchTerm}%,` +
-          `short_bio.ilike.%${searchTerm}%,` +
-          `job_title.ilike.%${searchTerm}%,` +
-          `name.ilike.%${searchTerm}%,` +
-          `company_name.ilike.%${searchTerm}%`
-        );
       }
       
       const { data, error } = await query;
@@ -82,7 +70,35 @@ export function useTalentSearch() {
       
       let filteredResults = data || [];
       
-      // Apply array filters client-side (Supabase doesn't support complex array queries easily)
+      // Apply text search across all relevant fields
+      if (filters.searchTerm.trim()) {
+        const searchTerm = filters.searchTerm.toLowerCase();
+        filteredResults = filteredResults.filter(item => {
+          const matchesText = (
+            item.long_bio?.toLowerCase().includes(searchTerm) ||
+            item.short_bio?.toLowerCase().includes(searchTerm) ||
+            item.job_title?.toLowerCase().includes(searchTerm) ||
+            item.name?.toLowerCase().includes(searchTerm) ||
+            item.company_name?.toLowerCase().includes(searchTerm)
+          );
+          
+          const matchesKeywords = item.keywords?.some(keyword => 
+            keyword.toLowerCase().includes(searchTerm)
+          ) || false;
+          
+          const matchesAreas = item.areas_of_expertise?.some(area => 
+            area.toLowerCase().includes(searchTerm)
+          ) || false;
+          
+          const matchesMemberships = item.memberships?.some(membership => 
+            membership.toLowerCase().includes(searchTerm)
+          ) || false;
+          
+          return matchesText || matchesKeywords || matchesAreas || matchesMemberships;
+        });
+      }
+      
+      // Apply array filters client-side
       if (filters.languages.length > 0) {
         filteredResults = filteredResults.filter(item => 
           item.languages?.some(lang => filters.languages.includes(lang))
@@ -99,31 +115,6 @@ export function useTalentSearch() {
         filteredResults = filteredResults.filter(item => 
           item.memberships?.some(membership => filters.memberships.includes(membership))
         );
-      }
-      
-      // Additional keyword search in arrays
-      if (filters.searchTerm.trim()) {
-        const searchTerm = filters.searchTerm.toLowerCase();
-        filteredResults = filteredResults.filter(item => {
-          const matchesKeywords = item.keywords?.some(keyword => 
-            keyword.toLowerCase().includes(searchTerm)
-          ) || false;
-          
-          const matchesAreas = item.areas_of_expertise?.some(area => 
-            area.toLowerCase().includes(searchTerm)
-          ) || false;
-          
-          const matchesMemberships = item.memberships?.some(membership => 
-            membership.toLowerCase().includes(searchTerm)
-          ) || false;
-          
-          return matchesKeywords || matchesAreas || matchesMemberships || 
-                 (item.long_bio?.toLowerCase().includes(searchTerm)) ||
-                 (item.short_bio?.toLowerCase().includes(searchTerm)) ||
-                 (item.job_title?.toLowerCase().includes(searchTerm)) ||
-                 (item.name?.toLowerCase().includes(searchTerm)) ||
-                 (item.company_name?.toLowerCase().includes(searchTerm));
-        });
       }
       
       setResults(filteredResults);
