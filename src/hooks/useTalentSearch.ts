@@ -151,7 +151,38 @@ export function useTalentSearch() {
         );
       }
       
-      setResults(filteredResults);
+      // Sort by completeness (most complete profiles first)
+      const sortByCompleteness = (profiles: any[]) => {
+        return profiles.sort((a, b) => {
+          const getCompleteness = (profile: any) => {
+            const fields = [
+              'name', 'job_title', 'company_name', 'nationality', 
+              'short_bio', 'long_bio', 'profile_picture_url',
+              'areas_of_expertise', 'languages', 'keywords', 'memberships'
+            ];
+            
+            let score = 0;
+            fields.forEach(field => {
+              const value = profile[field];
+              if (value !== null && value !== undefined) {
+                if (Array.isArray(value)) {
+                  score += value.length > 0 ? 1 : 0;
+                } else if (typeof value === 'string') {
+                  score += value.trim().length > 0 ? 1 : 0;
+                } else {
+                  score += 1;
+                }
+              }
+            });
+            return score;
+          };
+          
+          return getCompleteness(b) - getCompleteness(a); // Descending order
+        });
+      };
+      
+      const sortedResults = sortByCompleteness(filteredResults);
+      setResults(sortedResults);
     } catch (error) {
       console.error("Search error:", error);
       setResults([]);

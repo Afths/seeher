@@ -107,11 +107,14 @@ const Index = () => {
       <div className="bg-gradient-to-r from-background via-accent/30 to-background border-b border-border/40">
         <div className="container mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
+            <div className="flex-1" />
+            
             <div className="flex items-center">
               <img src="/lovable-uploads/c78fd2de-1860-470e-826c-241b2a3a2f4f.png" alt="SeeHer Logo" className="h-16" />
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex-1 flex justify-end">
+              <div className="flex items-center gap-4">
               <Button onClick={handleOpenSubmissionModal} size="sm" className="rounded-xl">
                 Submit Profile
               </Button>
@@ -126,6 +129,7 @@ const Index = () => {
                 </> : <Button variant="outline" onClick={handleOpenSignInModal} size="sm" className="rounded-xl">
                   Sign In
                 </Button>}
+              </div>
             </div>
           </div>
         </div>
