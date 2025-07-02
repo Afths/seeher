@@ -126,10 +126,6 @@ export function useProfileSubmission() {
 
       if (error) throw error;
 
-      toast({
-        title: "Thank you for being here. Your profile is being reviewed. We get in touch as soon as we get to it - typically 1-2 weeks. 🤍",
-      });
-      
       return true; // Success
     } catch (error) {
       if (error instanceof z.ZodError) {

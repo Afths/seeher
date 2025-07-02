@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { NationalitySelect } from "@/components/NationalitySelect";
+import { SuccessModal } from "@/components/SuccessModal";
 import { useProfileSubmission } from "@/hooks/useProfileSubmission";
 
 interface ProfileSubmissionModalProps {
@@ -18,6 +20,7 @@ interface ProfileSubmissionModalProps {
 }
 
 export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionModalProps) {
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const {
     formData,
     setFormData,
@@ -40,12 +43,17 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
     if (success) {
       resetForm();
       onClose();
+      setShowSuccessModal(true);
     }
   };
 
   const handleClose = () => {
     resetForm();
     onClose();
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
   };
 
   return (
@@ -177,6 +185,11 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
           </div>
         </form>
       </DialogContent>
+      
+      <SuccessModal 
+        isOpen={showSuccessModal} 
+        onClose={handleSuccessModalClose} 
+      />
     </Dialog>
   );
 }
