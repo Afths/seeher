@@ -144,6 +144,7 @@ export type Database = {
           nationality: string | null
           profile_picture_url: string | null
           short_bio: string | null
+          social_media_links: Json | null
           status: string | null
         }
         Insert: {
@@ -161,7 +162,8 @@ export type Database = {
           nationality?: string | null
           profile_picture_url?: string | null
           short_bio?: string | null
-          status?: never
+          social_media_links?: Json | null
+          status?: string | null
         }
         Update: {
           areas_of_expertise?: string[] | null
@@ -178,7 +180,8 @@ export type Database = {
           nationality?: string | null
           profile_picture_url?: string | null
           short_bio?: string | null
-          status?: never
+          social_media_links?: Json | null
+          status?: string | null
         }
         Relationships: []
       }

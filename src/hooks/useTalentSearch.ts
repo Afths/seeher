@@ -21,6 +21,7 @@ type WomanPublic = Pick<Woman,
   | "memberships" 
   | "interested_in" 
   | "created_at"
+  | "social_media_links"
 > & {
   status: string | null;
 };
