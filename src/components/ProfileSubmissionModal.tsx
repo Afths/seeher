@@ -14,6 +14,7 @@ import { SearchableSelect } from "@/components/SearchableSelect";
 import { NationalitySelect } from "@/components/NationalitySelect";
 import { SuccessModal } from "@/components/SuccessModal";
 import { useProfileSubmission } from "@/hooks/useProfileSubmission";
+import { Upload } from "lucide-react";
 
 interface ProfileSubmissionModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface ProfileSubmissionModalProps {
 
 export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionModalProps) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const {
     formData,
     setFormData,
@@ -40,9 +42,10 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
   } = useProfileSubmission();
 
   const handleFormSubmit = async (e: React.FormEvent) => {
-    const success = await handleSubmit(e);
+    const success = await handleSubmit(e, profilePicture);
     if (success) {
       resetForm();
+      setProfilePicture(null);
       onClose();
       setShowSuccessModal(true);
     }
@@ -50,6 +53,7 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
 
   const handleClose = () => {
     resetForm();
+    setProfilePicture(null);
     onClose();
   };
 
@@ -108,6 +112,27 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
                 value={formData.companyName}
                 onChange={(e) => setFormData({...formData, companyName: e.target.value})}
               />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="profilePicture">Profile Picture</Label>
+            <div className="mt-1">
+              <Input
+                id="profilePicture"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  setProfilePicture(file || null);
+                }}
+                className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+              />
+              {profilePicture && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Selected: {profilePicture.name}
+                </p>
+              )}
             </div>
           </div>
 

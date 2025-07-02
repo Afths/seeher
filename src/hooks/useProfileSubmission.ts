@@ -66,7 +66,7 @@ export function useProfileSubmission() {
     setErrors({});
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, profilePicture?: File | null) => {
     e.preventDefault();
     setErrors({});
 
@@ -83,6 +83,29 @@ export function useProfileSubmission() {
 
     setLoading(true);
     try {
+      let profilePictureUrl = "";
+
+      // Upload profile picture if provided
+      if (profilePicture) {
+        const fileExt = profilePicture.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('profiles')
+          .upload(filePath, profilePicture);
+
+        if (uploadError) {
+          throw new Error(`Failed to upload image: ${uploadError.message}`);
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('profiles')
+          .getPublicUrl(filePath);
+
+        profilePictureUrl = publicUrl;
+      }
+
       // Prepare data for validation
       const submissionData = {
         name: sanitizeInput(formData.name),
@@ -118,7 +141,7 @@ export function useProfileSubmission() {
           contact_number: validatedData.contact_number,
           alt_contact_name: validatedData.alt_contact_name,
           interested_in: validatedData.interested_in,
-          profile_picture_url: formData.profilePictureUrl,
+          profile_picture_url: profilePictureUrl,
           languages: validatedData.languages,
           areas_of_expertise: validatedData.areas_of_expertise,
           memberships: validatedData.memberships,
