@@ -65,9 +65,9 @@ export function TalentCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between mb-1">
               <h3 className="text-lg font-semibold text-foreground">{formatName(name)}</h3>
-              {socialLinks.linkedin_url && (
+              {socialLinks.raw && socialLinks.raw.includes('linkedin.com') && (
                 <a
-                  href={socialLinks.linkedin_url}
+                  href={socialLinks.raw}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors ml-2"
