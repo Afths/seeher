@@ -128,7 +128,7 @@ export function SearchFilters({
   return (
     <Card className="backdrop-blur-sm bg-card/80 border-border/40 rounded-2xl">
       <CardContent className="pt-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 gap-6">
           {languages.length > 0 && (
             <FilterDropdown
               title="LANGUAGES"
