@@ -12,16 +12,16 @@ export const profileSubmissionSchema = z.object({
     .max(255, "Email must be less than 255 characters"),
   
   job_title: z.string()
-    .max(100, "Job title must be less than 100 characters")
-    .optional(),
+    .min(1, "Job title is required")
+    .max(100, "Job title must be less than 100 characters"),
   
   company_name: z.string()
     .max(100, "Company name must be less than 100 characters")
     .optional(),
   
   nationality: z.string()
-    .max(50, "Nationality must be less than 50 characters")
-    .optional(),
+    .min(1, "Nationality is required")
+    .max(50, "Nationality must be less than 50 characters"),
   
   contact_number: z.string()
     .regex(/^[\+]?[1-9][\d]{0,15}$/, "Invalid phone number format")
@@ -33,16 +33,16 @@ export const profileSubmissionSchema = z.object({
     .optional(),
   
   short_bio: z.string()
-    .max(500, "Short bio must be less than 500 characters")
-    .optional(),
+    .min(1, "Short bio is required")
+    .max(500, "Short bio must be less than 500 characters"),
   
   long_bio: z.string()
     .max(2000, "Long bio must be less than 2000 characters")
     .optional(),
   
-  areas_of_expertise: z.array(z.string().max(50)).max(10, "Maximum 10 areas of expertise allowed"),
+  areas_of_expertise: z.array(z.string().max(50)).min(1, "At least one area of expertise is required").max(10, "Maximum 10 areas of expertise allowed"),
   
-  languages: z.array(z.string().max(30)).max(15, "Maximum 15 languages allowed"),
+  languages: z.array(z.string().max(30)).min(1, "At least one language is required").max(15, "Maximum 15 languages allowed"),
   
   keywords: z.array(z.string().max(30)).max(20, "Maximum 20 keywords allowed"),
   

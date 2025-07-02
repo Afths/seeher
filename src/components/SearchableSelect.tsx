@@ -37,16 +37,23 @@ export function SearchableSelect({
       const { data } = await supabase
         .from("women")
         .select(field)
-        .eq("status", "APPROVED");
+        .eq("status", "APPROVED")
+        .not(field, "is", null);
 
       if (data) {
         const allValues = new Set<string>();
         data.forEach((item) => {
           const values = item[field];
-          if (Array.isArray(values)) {
-            values.forEach(value => allValues.add(value));
-          } else if (values) {
-            allValues.add(values);
+          if (field === "nationality") {
+            // Handle nationality as single string
+            if (values) {
+              allValues.add(values as string);
+            }
+          } else {
+            // Handle arrays for languages, areas_of_expertise, keywords
+            if (Array.isArray(values)) {
+              values.forEach(value => allValues.add(value));
+            }
           }
         });
         setAvailableOptions(Array.from(allValues).sort());

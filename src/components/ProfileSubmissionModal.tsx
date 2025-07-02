@@ -91,11 +91,12 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
             </div>
             
             <div>
-              <Label htmlFor="jobTitle">Job Title</Label>
+              <Label htmlFor="jobTitle">Job Title *</Label>
               <Input
                 id="jobTitle"
                 value={formData.jobTitle}
                 onChange={(e) => setFormData({...formData, jobTitle: e.target.value})}
+                required
               />
             </div>
             
@@ -110,12 +111,13 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
           </div>
 
           <div>
-            <Label htmlFor="shortBio">Short Bio</Label>
+            <Label htmlFor="shortBio">Short Bio *</Label>
             <Textarea
               id="shortBio"
               value={formData.shortBio}
               onChange={(e) => setFormData({...formData, shortBio: e.target.value})}
               placeholder="Brief description about yourself..."
+              required
             />
           </div>
 
@@ -131,11 +133,13 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <NationalitySelect
-              label="Nationality"
-              placeholder="Search or enter nationality..."
-              value={formData.nationality}
-              onChange={(value) => setFormData({...formData, nationality: value})}
+            <SearchableSelect
+              label="Nationality *"
+              placeholder="Search or add nationality..."
+              selectedItems={formData.nationality ? [formData.nationality] : []}
+              onItemsChange={(items) => setFormData({...formData, nationality: items[0] || ""})}
+              variant="secondary"
+              field="nationality"
             />
             
             <div>
@@ -149,7 +153,7 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
           </div>
 
           <SearchableSelect
-            label="Languages"
+            label="Languages *"
             placeholder="Search or add languages..."
             selectedItems={languages}
             onItemsChange={setLanguages}
@@ -158,7 +162,7 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
           />
 
           <SearchableSelect
-            label="Areas of Expertise"
+            label="Areas of Expertise *"
             placeholder="Search or add areas of expertise..."
             selectedItems={areasOfExpertise}
             onItemsChange={setAreasOfExpertise}
