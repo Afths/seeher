@@ -28,7 +28,9 @@ const Index = () => {
     user,
     signOut
   } = useAuth();
-  const { isAdmin } = useIsAdmin();
+  const {
+    isAdmin
+  } = useIsAdmin();
   const [searchInput, setSearchInput] = useState("");
   const [selectedWoman, setSelectedWoman] = useState<Woman | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,11 +50,9 @@ const Index = () => {
   const handleCloseSubmissionModal = () => {
     setIsSubmissionModalOpen(false);
   };
-
   const handleOpenSignInModal = () => {
     setIsSignInModalOpen(true);
   };
-
   const handleCloseSignInModal = () => {
     setIsSignInModalOpen(false);
   };
@@ -79,30 +79,24 @@ const Index = () => {
         <div className="container mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <img src="/lovable-uploads/c78fd2de-1860-470e-826c-241b2a3a2f4f.png" alt="SeeHer Logo" className="h-12" />
+              <img src="/lovable-uploads/c78fd2de-1860-470e-826c-241b2a3a2f4f.png" alt="SeeHer Logo" className="h-16" />
             </div>
             
             <div className="flex items-center gap-4">
               <Button onClick={handleOpenSubmissionModal} size="sm" className="rounded-xl">
                 Submit Profile
               </Button>
-              {user ? (
-                <>
-                  {isAdmin && (
-                    <Button variant="secondary" size="sm" className="rounded-xl" onClick={() => window.location.href = '/admin'}>
+              {user ? <>
+                  {isAdmin && <Button variant="secondary" size="sm" className="rounded-xl" onClick={() => window.location.href = '/admin'}>
                       Admin Dashboard
-                    </Button>
-                  )}
+                    </Button>}
                   <Button variant="outline" onClick={signOut} size="sm" className="rounded-xl">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </Button>
-                </>
-              ) : (
-                  <Button variant="outline" onClick={handleOpenSignInModal} size="sm" className="rounded-xl">
+                </> : <Button variant="outline" onClick={handleOpenSignInModal} size="sm" className="rounded-xl">
                   Sign In
-                </Button>
-              )}
+                </Button>}
             </div>
           </div>
         </div>
