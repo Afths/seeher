@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Tables } from "@/integrations/supabase/types";
 type Woman = Tables<"women">;
-type WomanPublic = Pick<Woman, "id" | "name" | "job_title" | "company_name" | "nationality" | "short_bio" | "long_bio" | "profile_picture_url" | "areas_of_expertise" | "languages" | "keywords" | "memberships" | "interested_in" | "created_at"> & {
+type WomanPublic = Pick<Woman, "id" | "name" | "job_title" | "company_name" | "nationality" | "short_bio" | "long_bio" | "profile_picture_url" | "areas_of_expertise" | "languages" | "keywords" | "memberships" | "interested_in" | "created_at" | "social_media_links"> & {
   status: string | null;
 };
 const Index = () => {
@@ -171,7 +171,7 @@ const Index = () => {
               </div>
               
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {results.map(person => <TalentCard key={person.id} name={person.name} companyName={person.company_name || undefined} jobTitle={person.job_title || undefined} shortBio={person.short_bio || undefined} profilePictureUrl={person.profile_picture_url || undefined} keywords={person.keywords || []} socialMediaLinks={null} languages={person.languages || []} areasOfExpertise={person.areas_of_expertise || []} onClick={() => handleCardClick(person as any)} />)}
+                {results.map(person => <TalentCard key={person.id} name={person.name} companyName={person.company_name || undefined} jobTitle={person.job_title || undefined} shortBio={person.short_bio || undefined} profilePictureUrl={person.profile_picture_url || undefined} keywords={person.keywords || []} socialMediaLinks={person.social_media_links} languages={person.languages || []} areasOfExpertise={person.areas_of_expertise || []} onClick={() => handleCardClick(person as any)} />)}
               </div>
               
               {results.length === 0 && <div className="text-center py-12">

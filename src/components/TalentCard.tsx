@@ -94,7 +94,7 @@ export function TalentCard({
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary hover:scale-110 transition-all duration-300 ease-out ml-2"
                 >
-                  <Linkedin className="w-5 h-5" />
+                  <Linkedin className="w-5 h-5 hover:fill-current" />
                 </a>
               )}
             </div>
