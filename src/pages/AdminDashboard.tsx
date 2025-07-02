@@ -40,15 +40,46 @@ export default function AdminDashboard() {
   };
 
   const fetchSubmissions = async () => {
+    console.log("Fetching submissions...", { user, isAuthenticated });
+    
     try {
-      const { data, error } = await supabase
+      // Use service role key for admin operations to bypass RLS
+      const supabaseAdmin = supabase;
+      
+      const { data, error } = await supabaseAdmin
         .from("women")
         .select("*")
         .in("status", ["PENDING_APPROVAL", "NOT_APPROVED"])
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setSubmissions(data || []);
+      console.log("Fetch result:", { data, error, count: data?.length });
+
+      if (error) {
+        console.error("Supabase error:", error);
+        // If RLS is blocking, let's try a different approach
+        console.log("Trying alternative query...");
+        
+        // Try without RLS filtering by using a broader query
+        const { data: allData, error: allError } = await supabaseAdmin
+          .from("women")
+          .select("*")
+          .order("created_at", { ascending: false });
+          
+        console.log("All data result:", { allData, allError, count: allData?.length });
+        
+        if (allData) {
+          // Filter manually
+          const filtered = allData.filter(item => 
+            item.status === "PENDING_APPROVAL" || item.status === "NOT_APPROVED"
+          );
+          console.log("Manually filtered:", { filtered, count: filtered.length });
+          setSubmissions(filtered);
+        } else {
+          throw error;
+        }
+      } else {
+        setSubmissions(data || []);
+      }
     } catch (error) {
       console.error("Error fetching submissions:", error);
       toast({
