@@ -135,9 +135,12 @@ export default function AdminDashboard() {
     return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
   };
 
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
+  console.log("AdminDashboard component rendered", { user, isAuthenticated });
+  
+  // Remove the redirect if user is not logged in - let anyone access admin with password
+  // if (!user) {
+  //   return <Navigate to="/" replace />;
+  // }
 
   if (!isAuthenticated) {
     return (
