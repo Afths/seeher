@@ -105,16 +105,20 @@ export function SearchFilters({
         </DropdownMenuContent>
       </DropdownMenu>
       {selectedOptions.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-2">
-          {selectedOptions.map((option) => (
-            <Badge 
-              key={option} 
-              variant="secondary" 
-              className="text-xs cursor-pointer"
-              onClick={() => onToggle(option)}
-            >
-              {option} ×
-            </Badge>
+        <div className="flex flex-wrap items-center gap-1 mt-2">
+          {selectedOptions.map((option, index) => (
+            <div key={option} className="flex items-center gap-1">
+              <Badge 
+                variant="secondary" 
+                className="text-xs cursor-pointer"
+                onClick={() => onToggle(option)}
+              >
+                {option} ×
+              </Badge>
+              {index < selectedOptions.length - 1 && (
+                <span className="text-xs text-muted-foreground font-medium">OR</span>
+              )}
+            </div>
           ))}
         </div>
       )}

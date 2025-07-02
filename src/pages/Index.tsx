@@ -109,34 +109,38 @@ const Index = () => {
       <div className="container mx-auto px-6 py-8">
         {/* Search Controls */}
         <div className="mb-8 space-y-6">
-          {/* Interest Tabs */}
-          <Tabs value={filters.interestedIn} onValueChange={handleTabChange}>
-            <TabsList className="bg-card/50 backdrop-blur-sm border border-border/40 rounded-xl p-1">
-              <TabsTrigger value="speaker" className="rounded-lg">Speaker</TabsTrigger>
-              <TabsTrigger value="panelist" className="rounded-lg">Panelist</TabsTrigger>
-              <TabsTrigger value="board member" className="rounded-lg">Board Member</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Interest Tabs - Centered */}
+          <div className="flex justify-center">
+            <Tabs value={filters.interestedIn} onValueChange={handleTabChange}>
+              <TabsList className="bg-card/50 backdrop-blur-sm border border-border/40 rounded-xl p-1">
+                <TabsTrigger value="speaker" className="rounded-lg">Speaker</TabsTrigger>
+                <TabsTrigger value="panelist" className="rounded-lg">Panelist</TabsTrigger>
+                <TabsTrigger value="board member" className="rounded-lg">Board Member</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
 
-          {/* Search Box */}
-          <div className="flex gap-4 max-w-2xl">
-            <div className="flex-1 relative">
-              <Input
-                placeholder="Search by name, bio, expertise, keywords..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="bg-card/50 backdrop-blur-sm border-border/40 rounded-xl pl-4 pr-12"
-              />
-              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          {/* Search Box - Full Width */}
+          <div className="w-full">
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <Input
+                  placeholder="Search by name, bio, expertise, keywords..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="bg-card/50 backdrop-blur-sm border-border/40 rounded-xl pl-4 pr-12"
+                />
+                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              </div>
+              <Button 
+                onClick={handleSearch}
+                className="rounded-xl px-6"
+                disabled={loading}
+              >
+                Search
+              </Button>
             </div>
-            <Button 
-              onClick={handleSearch}
-              className="rounded-xl px-6"
-              disabled={loading}
-            >
-              Search
-            </Button>
           </div>
         </div>
 
