@@ -66,7 +66,12 @@ export function useTalentSearch() {
       
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase query error:", error);
+        throw error;
+      }
+      
+      console.log("Raw data from Supabase:", data?.length, "records");
       
       let filteredResults = data || [];
       
@@ -130,6 +135,11 @@ export function useTalentSearch() {
   useEffect(() => {
     performSearch();
   }, [filters]);
+
+  // Initial load
+  useEffect(() => {
+    performSearch();
+  }, []);
 
   return {
     results,
