@@ -92,7 +92,7 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
         languages: languages.map(sanitizeInput),
         keywords: keywords.map(sanitizeInput),
         memberships: memberships.map(sanitizeInput),
-        interested_in: formData.interestedIn as "speaker" | "panelist" | "board member",
+        interested_in: [formData.interestedIn] as string[],
         consent: true
       };
 

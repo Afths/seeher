@@ -48,7 +48,7 @@ export const profileSubmissionSchema = z.object({
   
   memberships: z.array(z.string().max(100)).max(10, "Maximum 10 memberships allowed"),
   
-  interested_in: z.enum(["speaker", "panelist", "board member"]),
+  interested_in: z.array(z.enum(["speaker", "panelist", "board member"])).min(1, "At least one role must be selected"),
   
   social_media_links: z.record(z.string().url("Invalid URL format")).optional(),
   

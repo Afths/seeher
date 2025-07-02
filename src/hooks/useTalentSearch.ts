@@ -42,7 +42,7 @@ export function useTalentSearch() {
   const [allMemberships, setAllMemberships] = useState<string[]>([]);
   
   const [filters, setFilters] = useState<SearchFilters>({
-    interestedIn: "speaker",
+    interestedIn: "all",
     searchTerm: "",
     languages: [],
     areasOfExpertise: [],
@@ -87,7 +87,7 @@ export function useTalentSearch() {
       let query = supabase.from("women_public").select("*");
       
       // Filter by interested_in (now array, check if current filter is in the array)
-      if (filters.interestedIn) {
+      if (filters.interestedIn && filters.interestedIn !== "all") {
         query = query.contains("interested_in", [filters.interestedIn]);
       }
       

@@ -123,6 +123,7 @@ const Index = () => {
           <div className="flex justify-center">
             <Tabs value={filters.interestedIn} onValueChange={handleTabChange}>
               <TabsList className="bg-card/50 backdrop-blur-sm border border-border/40 rounded-xl p-1">
+                <TabsTrigger value="all" className="rounded-lg text-sm font-medium uppercase">ALL</TabsTrigger>
                 <TabsTrigger value="speaker" className="rounded-lg text-sm font-medium uppercase">SPEAKER</TabsTrigger>
                 <TabsTrigger value="panelist" className="rounded-lg text-sm font-medium uppercase">PANELIST</TabsTrigger>
                 <TabsTrigger value="board member" className="rounded-lg text-sm font-medium uppercase">BOARD MEMBER</TabsTrigger>
