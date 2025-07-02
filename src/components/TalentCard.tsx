@@ -53,22 +53,24 @@ export function TalentCard({
     >
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <Avatar className="w-32 h-32 border-2 border-border/20">
-            <AvatarImage src={profilePictureUrl} alt={name} />
-            <AvatarFallback className="bg-muted text-muted-foreground text-2xl font-medium">
-              {getInitials(name)}
-            </AvatarFallback>
-          </Avatar>
+          <div className="w-32 h-32 flex-shrink-0">
+            <Avatar className="w-full h-full border-2 border-border/20">
+              <AvatarImage src={profilePictureUrl} alt={name} className="object-cover" />
+              <AvatarFallback className="bg-muted text-muted-foreground text-2xl font-medium">
+                {getInitials(name)}
+              </AvatarFallback>
+            </Avatar>
+          </div>
           
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between mb-1">
               <h3 className="text-lg font-semibold text-foreground">{formatName(name)}</h3>
-              {socialLinks.linkedin && (
+              {socialLinks.linkedin_url && (
                 <a
-                  href={socialLinks.linkedin}
+                  href={socialLinks.linkedin_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors ml-2"
                 >
                   <Linkedin className="w-5 h-5" />
                 </a>
