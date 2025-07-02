@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TalentCard } from "@/components/TalentCard";
 import { SearchFilters } from "@/components/SearchFilters";
+import { ProfileModal } from "@/components/ProfileModal";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
+import { Tables } from "@/integrations/supabase/types";
+
+type Woman = Tables<"women">;
 
 const Index = () => {
   const {
@@ -20,6 +24,18 @@ const Index = () => {
   } = useTalentSearch();
 
   const [searchInput, setSearchInput] = useState("");
+  const [selectedWoman, setSelectedWoman] = useState<Woman | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCardClick = (woman: Woman) => {
+    setSelectedWoman(woman);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedWoman(null);
+  };
 
   const handleSearch = () => {
     setFilters(prev => ({ ...prev, searchTerm: searchInput }));
@@ -123,6 +139,7 @@ const Index = () => {
                       keywords={person.keywords || []}
                       socialMediaLinks={person.social_media_links}
                       languages={person.languages || []}
+                      onClick={() => handleCardClick(person)}
                     />
                   ))}
                 </div>
@@ -137,6 +154,12 @@ const Index = () => {
           </div>
         </div>
       </div>
+      
+      <ProfileModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        woman={selectedWoman}
+      />
     </div>
   );
 };

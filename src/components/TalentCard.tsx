@@ -12,6 +12,7 @@ interface TalentCardProps {
   keywords?: string[];
   socialMediaLinks?: any;
   languages?: string[];
+  onClick?: () => void;
 }
 
 export function TalentCard({
@@ -22,7 +23,8 @@ export function TalentCard({
   profilePictureUrl,
   keywords = [],
   socialMediaLinks,
-  languages = []
+  languages = [],
+  onClick
 }: TalentCardProps) {
   const getInitials = (name: string) => {
     return name
@@ -36,7 +38,10 @@ export function TalentCard({
   const socialLinks = socialMediaLinks || {};
 
   return (
-    <Card className="backdrop-blur-sm bg-card/80 border-border/40 rounded-2xl hover:shadow-lg transition-all duration-300">
+    <Card 
+      className="backdrop-blur-sm bg-card/80 border-border/40 rounded-2xl hover:shadow-lg transition-all duration-300 cursor-pointer" 
+      onClick={onClick}
+    >
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <Avatar className="w-16 h-16 border-2 border-border/20">

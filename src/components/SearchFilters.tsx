@@ -65,7 +65,7 @@ export function SearchFilters({
     onToggle: (option: string) => void;
   }) => (
     <div>
-      <h4 className="text-sm font-medium text-foreground mb-3">{title}</h4>
+      <h4 className="text-xs font-medium text-foreground mb-3">{title}</h4>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button 
@@ -123,36 +123,35 @@ export function SearchFilters({
 
   return (
     <Card className="backdrop-blur-sm bg-card/80 border-border/40 rounded-2xl">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-medium">Filters</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {languages.length > 0 && (
-          <FilterDropdown
-            title="Languages"
-            options={languages}
-            selectedOptions={selectedLanguages}
-            onToggle={handleLanguageToggle}
-          />
-        )}
+      <CardContent className="pt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {languages.length > 0 && (
+            <FilterDropdown
+              title="LANGUAGES"
+              options={languages}
+              selectedOptions={selectedLanguages}
+              onToggle={handleLanguageToggle}
+            />
+          )}
 
-        {areasOfExpertise.length > 0 && (
-          <FilterDropdown
-            title="Areas of Expertise"
-            options={areasOfExpertise}
-            selectedOptions={selectedAreasOfExpertise}
-            onToggle={handleAreaToggle}
-          />
-        )}
+          {areasOfExpertise.length > 0 && (
+            <FilterDropdown
+              title="AREAS OF EXPERTISE"
+              options={areasOfExpertise}
+              selectedOptions={selectedAreasOfExpertise}
+              onToggle={handleAreaToggle}
+            />
+          )}
 
-        {memberships.length > 0 && (
-          <FilterDropdown
-            title="Memberships"
-            options={memberships}
-            selectedOptions={selectedMemberships}
-            onToggle={handleMembershipToggle}
-          />
-        )}
+          {memberships.length > 0 && (
+            <FilterDropdown
+              title="MEMBERSHIPS"
+              options={memberships}
+              selectedOptions={selectedMemberships}
+              onToggle={handleMembershipToggle}
+            />
+          )}
+        </div>
       </CardContent>
     </Card>
   );
