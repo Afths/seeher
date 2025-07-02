@@ -64,7 +64,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
-          interested_in: string | null
+          interested_in: string[] | null
           job_title: string | null
           keywords: string[] | null
           languages: string[] | null
@@ -87,7 +87,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
-          interested_in?: string | null
+          interested_in?: string[] | null
           job_title?: string | null
           keywords?: string[] | null
           languages?: string[] | null
@@ -110,7 +110,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
-          interested_in?: string | null
+          interested_in?: string[] | null
           job_title?: string | null
           keywords?: string[] | null
           languages?: string[] | null
@@ -128,63 +128,7 @@ export type Database = {
       }
     }
     Views: {
-      women_public: {
-        Row: {
-          areas_of_expertise: string[] | null
-          company_name: string | null
-          created_at: string | null
-          id: string | null
-          interested_in: string | null
-          job_title: string | null
-          keywords: string[] | null
-          languages: string[] | null
-          long_bio: string | null
-          memberships: string[] | null
-          name: string | null
-          nationality: string | null
-          profile_picture_url: string | null
-          short_bio: string | null
-          social_media_links: Json | null
-          status: string | null
-        }
-        Insert: {
-          areas_of_expertise?: string[] | null
-          company_name?: string | null
-          created_at?: string | null
-          id?: string | null
-          interested_in?: string | null
-          job_title?: string | null
-          keywords?: string[] | null
-          languages?: string[] | null
-          long_bio?: string | null
-          memberships?: string[] | null
-          name?: string | null
-          nationality?: string | null
-          profile_picture_url?: string | null
-          short_bio?: string | null
-          social_media_links?: Json | null
-          status?: string | null
-        }
-        Update: {
-          areas_of_expertise?: string[] | null
-          company_name?: string | null
-          created_at?: string | null
-          id?: string | null
-          interested_in?: string | null
-          job_title?: string | null
-          keywords?: string[] | null
-          languages?: string[] | null
-          long_bio?: string | null
-          memberships?: string[] | null
-          name?: string | null
-          nationality?: string | null
-          profile_picture_url?: string | null
-          short_bio?: string | null
-          social_media_links?: Json | null
-          status?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       is_admin: {
