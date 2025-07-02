@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TalentCard } from "@/components/TalentCard";
 import { SearchFilters } from "@/components/SearchFilters";
 import { ProfileModal } from "@/components/ProfileModal";
+import { ProfileSubmissionModal } from "@/components/ProfileSubmissionModal";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
+import { useAuth } from "@/contexts/AuthContext";
 import { Tables } from "@/integrations/supabase/types";
+import { Link } from "react-router-dom";
 
 type Woman = Tables<"women">;
 
@@ -23,9 +26,11 @@ const Index = () => {
     allMemberships
   } = useTalentSearch();
 
+  const { user, signOut } = useAuth();
   const [searchInput, setSearchInput] = useState("");
   const [selectedWoman, setSelectedWoman] = useState<Woman | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
 
   const handleCardClick = (woman: Woman) => {
     setSelectedWoman(woman);
@@ -35,6 +40,14 @@ const Index = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedWoman(null);
+  };
+
+  const handleOpenSubmissionModal = () => {
+    setIsSubmissionModalOpen(true);
+  };
+
+  const handleCloseSubmissionModal = () => {
+    setIsSubmissionModalOpen(false);
   };
 
   const handleSearch = () => {
@@ -56,8 +69,40 @@ const Index = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-background via-accent/30 to-background border-b border-border/40">
         <div className="container mx-auto px-6 py-8">
-          <h1 className="text-3xl font-semibold text-foreground mb-2">Talent Spotlight</h1>
-          <p className="text-muted-foreground">Discover exceptional professionals for your next opportunity</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold text-foreground mb-2">Talent Spotlight</h1>
+              <p className="text-muted-foreground">Discover exceptional professionals for your next opportunity</p>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {user ? (
+                <>
+                  <Button 
+                    onClick={handleOpenSubmissionModal}
+                    className="rounded-xl"
+                  >
+                    Submit Profile
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={signOut}
+                    className="rounded-xl"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Link to="/auth">
+                  <Button variant="outline" className="rounded-xl">
+                    <User className="w-4 h-4 mr-2" />
+                    Sign In
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -159,6 +204,11 @@ const Index = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         woman={selectedWoman}
+      />
+      
+      <ProfileSubmissionModal
+        isOpen={isSubmissionModalOpen}
+        onClose={handleCloseSubmissionModal}
       />
     </div>
   );
