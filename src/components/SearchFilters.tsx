@@ -1,6 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 interface SearchFiltersProps {
   languages: string[];
@@ -46,6 +53,74 @@ export function SearchFilters({
     onMembershipsChange(updated);
   };
 
+  const FilterDropdown = ({ 
+    title, 
+    options, 
+    selectedOptions, 
+    onToggle 
+  }: {
+    title: string;
+    options: string[];
+    selectedOptions: string[];
+    onToggle: (option: string) => void;
+  }) => (
+    <div>
+      <h4 className="text-sm font-medium text-foreground mb-3">{title}</h4>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            variant="outline" 
+            className="w-full justify-between bg-background/50 border-border/40"
+          >
+            <span className="text-sm">
+              {selectedOptions.length === 0 
+                ? `Select ${title.toLowerCase()}` 
+                : `${selectedOptions.length} selected`
+              }
+            </span>
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent 
+          className="w-64 max-h-96 overflow-y-auto bg-background border-border/40"
+          align="start"
+        >
+          <div className="p-2 space-y-2">
+            {options.map((option) => (
+              <div key={option} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${title.toLowerCase()}-${option}`}
+                  checked={selectedOptions.includes(option)}
+                  onCheckedChange={() => onToggle(option)}
+                />
+                <label
+                  htmlFor={`${title.toLowerCase()}-${option}`}
+                  className="text-sm text-foreground cursor-pointer flex-1"
+                >
+                  {option}
+                </label>
+              </div>
+            ))}
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {selectedOptions.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-2">
+          {selectedOptions.map((option) => (
+            <Badge 
+              key={option} 
+              variant="secondary" 
+              className="text-xs cursor-pointer"
+              onClick={() => onToggle(option)}
+            >
+              {option} ×
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <Card className="backdrop-blur-sm bg-card/80 border-border/40 rounded-2xl">
       <CardHeader className="pb-4">
@@ -53,72 +128,30 @@ export function SearchFilters({
       </CardHeader>
       <CardContent className="space-y-6">
         {languages.length > 0 && (
-          <div>
-            <h4 className="text-sm font-medium text-foreground mb-3">Languages</h4>
-            <div className="space-y-2">
-              {languages.map((language) => (
-                <div key={language} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`lang-${language}`}
-                    checked={selectedLanguages.includes(language)}
-                    onCheckedChange={() => handleLanguageToggle(language)}
-                  />
-                  <label
-                    htmlFor={`lang-${language}`}
-                    className="text-sm text-foreground cursor-pointer"
-                  >
-                    {language}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown
+            title="Languages"
+            options={languages}
+            selectedOptions={selectedLanguages}
+            onToggle={handleLanguageToggle}
+          />
         )}
 
         {areasOfExpertise.length > 0 && (
-          <div>
-            <h4 className="text-sm font-medium text-foreground mb-3">Areas of Expertise</h4>
-            <div className="space-y-2">
-              {areasOfExpertise.map((area) => (
-                <div key={area} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`area-${area}`}
-                    checked={selectedAreasOfExpertise.includes(area)}
-                    onCheckedChange={() => handleAreaToggle(area)}
-                  />
-                  <label
-                    htmlFor={`area-${area}`}
-                    className="text-sm text-foreground cursor-pointer"
-                  >
-                    {area}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown
+            title="Areas of Expertise"
+            options={areasOfExpertise}
+            selectedOptions={selectedAreasOfExpertise}
+            onToggle={handleAreaToggle}
+          />
         )}
 
         {memberships.length > 0 && (
-          <div>
-            <h4 className="text-sm font-medium text-foreground mb-3">Memberships</h4>
-            <div className="space-y-2">
-              {memberships.map((membership) => (
-                <div key={membership} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`mem-${membership}`}
-                    checked={selectedMemberships.includes(membership)}
-                    onCheckedChange={() => handleMembershipToggle(membership)}
-                  />
-                  <label
-                    htmlFor={`mem-${membership}`}
-                    className="text-sm text-foreground cursor-pointer"
-                  >
-                    {membership}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown
+            title="Memberships"
+            options={memberships}
+            selectedOptions={selectedMemberships}
+            onToggle={handleMembershipToggle}
+          />
         )}
       </CardContent>
     </Card>

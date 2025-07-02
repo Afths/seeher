@@ -103,19 +103,22 @@ export function useTalentSearch() {
         });
       }
       
-      // Apply array filters client-side
+      // Apply array filters client-side with correct OR/AND logic
+      // Languages filter: OR within filter (if English and Spanish selected, must have English OR Spanish)
       if (filters.languages.length > 0) {
         filteredResults = filteredResults.filter(item => 
           item.languages?.some(lang => filters.languages.includes(lang))
         );
       }
       
+      // Areas of expertise filter: AND between filters, OR within filter (if Business and Tech selected, must have Business OR Tech)
       if (filters.areasOfExpertise.length > 0) {
         filteredResults = filteredResults.filter(item => 
           item.areas_of_expertise?.some(area => filters.areasOfExpertise.includes(area))
         );
       }
       
+      // Memberships filter: OR within filter (if Member1 and Member2 selected, must have Member1 OR Member2)
       if (filters.memberships.length > 0) {
         filteredResults = filteredResults.filter(item => 
           item.memberships?.some(membership => filters.memberships.includes(membership))
