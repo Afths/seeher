@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSuggestExpertise } from "@/hooks/useSuggestExpertise";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const { toast } = useToast();
+  const { suggestExpertise, isLoading: isGeneratingExpertise } = useSuggestExpertise();
   const [submissions, setSubmissions] = useState<SubmissionType[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -152,12 +154,30 @@ export default function AdminDashboard() {
       </div>
 
       <div className="container mx-auto px-6 py-8">
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold mb-2">Profile Submissions</h2>
-          <p className="text-muted-foreground">
-            {submissions.filter(s => s.status === "PENDING_APPROVAL").length} pending approval,{" "}
-            {submissions.filter(s => s.status === "NOT_APPROVED").length} rejected
-          </p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold mb-2">Profile Submissions</h2>
+            <p className="text-muted-foreground">
+              {submissions.filter(s => s.status === "PENDING_APPROVAL").length} pending approval,{" "}
+              {submissions.filter(s => s.status === "NOT_APPROVED").length} rejected
+            </p>
+          </div>
+          
+          <Button 
+            onClick={() => suggestExpertise()}
+            disabled={isGeneratingExpertise}
+            size="sm"
+            className="rounded-xl"
+          >
+            {isGeneratingExpertise ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                Analyzing Profiles...
+              </>
+            ) : (
+              'Suggest Areas of Expertise'
+            )}
+          </Button>
         </div>
 
         {loading ? (

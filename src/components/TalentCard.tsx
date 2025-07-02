@@ -77,10 +77,12 @@ export function TalentCard({
               )}
             </div>
             
-            {jobTitle && (
+            {(jobTitle || companyName) && (
               <p className="text-sm text-muted-foreground mb-2">
-                {jobTitle}
-                {companyName && ` at ${companyName}`}
+                {jobTitle 
+                  ? `${jobTitle}${companyName ? ` at ${companyName}` : ''}`
+                  : `at ${companyName}`
+                }
               </p>
             )}
 
