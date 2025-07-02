@@ -72,6 +72,88 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
                 )}
               </CardContent>
             </Card>
+
+            {/* Areas of Expertise */}
+            {woman.areas_of_expertise && woman.areas_of_expertise.length > 0 && (
+              <Card>
+                <CardContent className="pt-4">
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Areas of Expertise</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {woman.areas_of_expertise.map((area) => (
+                      <Badge key={area} variant="outline" className="text-xs">
+                        {area}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Languages */}
+            {woman.languages && woman.languages.length > 0 && (
+              <Card>
+                <CardContent className="pt-4">
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Languages</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {woman.languages.map((language) => (
+                      <Badge key={language} variant="outline" className="text-xs">
+                        {language}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Contact Information */}
+            {(woman.email || woman.contact_number || woman.alt_contact_name || socialLinks) && (
+              <Card>
+                <CardContent className="pt-4 space-y-3">
+                  <h4 className="text-sm font-medium text-muted-foreground">Contact Information</h4>
+                  <div className="space-y-2">
+                    {woman.email && (
+                      <div>
+                        <h5 className="text-xs font-medium text-muted-foreground">Email</h5>
+                        <p className="text-xs">{woman.email}</p>
+                      </div>
+                    )}
+                    
+                    {woman.contact_number && (
+                      <div>
+                        <h5 className="text-xs font-medium text-muted-foreground">Phone</h5>
+                        <p className="text-xs">{woman.contact_number}</p>
+                      </div>
+                    )}
+                    
+                    {woman.alt_contact_name && (
+                      <div>
+                        <h5 className="text-xs font-medium text-muted-foreground">Alternative Contact</h5>
+                        <p className="text-xs">{woman.alt_contact_name}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {socialLinks && Object.keys(socialLinks).length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-medium text-muted-foreground mb-2">Social Media</h5>
+                      <div className="flex flex-wrap gap-1">
+                        {Object.entries(socialLinks).map(([platform, url]) => (
+                          <Button
+                            key={platform}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(url, '_blank')}
+                            className="text-xs h-6 px-2"
+                          >
+                            {platform}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Right Columns - Detailed Information */}
@@ -97,34 +179,8 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 
             <Separator />
 
-            {/* Skills and Expertise */}
+            {/* Keywords and Memberships */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {woman.areas_of_expertise && woman.areas_of_expertise.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Areas of Expertise</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {woman.areas_of_expertise.map((area) => (
-                      <Badge key={area} variant="outline" className="text-xs">
-                        {area}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {woman.languages && woman.languages.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Languages</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {woman.languages.map((language) => (
-                      <Badge key={language} variant="outline" className="text-xs">
-                        {language}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {woman.keywords && woman.keywords.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-2">Keywords</h4>
@@ -151,57 +207,6 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
                 </div>
               )}
             </div>
-
-            {/* Contact Information */}
-            {(woman.email || woman.contact_number || woman.alt_contact_name || socialLinks) && (
-              <>
-                <Separator />
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Contact Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {woman.email && (
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-1">Email</h4>
-                        <p className="text-sm">{woman.email}</p>
-                      </div>
-                    )}
-                    
-                    {woman.contact_number && (
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-1">Phone</h4>
-                        <p className="text-sm">{woman.contact_number}</p>
-                      </div>
-                    )}
-                    
-                    {woman.alt_contact_name && (
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-1">Alternative Contact</h4>
-                        <p className="text-sm">{woman.alt_contact_name}</p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {socialLinks && Object.keys(socialLinks).length > 0 && (
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Social Media</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {Object.entries(socialLinks).map(([platform, url]) => (
-                          <Button
-                            key={platform}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(url, '_blank')}
-                            className="text-xs"
-                          >
-                            {platform}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
           </div>
         </div>
       </DialogContent>
