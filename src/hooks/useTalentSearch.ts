@@ -86,9 +86,9 @@ export function useTalentSearch() {
       // Use the secure public view that excludes sensitive data
       let query = supabase.from("women_public").select("*");
       
-      // Filter by interested_in (currently string, will be array later)
+      // Filter by interested_in (now array, check if current filter is in the array)
       if (filters.interestedIn) {
-        query = query.eq("interested_in", filters.interestedIn);
+        query = query.contains("interested_in", [filters.interestedIn]);
       }
       
       const { data, error } = await query;
