@@ -159,43 +159,50 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:col-span-1">
-            <SearchFilters languages={allLanguages} areasOfExpertise={allAreasOfExpertise} memberships={allMemberships} selectedLanguages={filters.languages} selectedAreasOfExpertise={filters.areasOfExpertise} selectedMemberships={filters.memberships} onLanguageChange={languages => setFilters(prev => ({
-            ...prev,
-            languages
-          }))} onAreasOfExpertiseChange={areas => setFilters(prev => ({
-            ...prev,
-            areasOfExpertise: areas
-          }))} onMembershipsChange={memberships => setFilters(prev => ({
-            ...prev,
-            memberships
-          }))} />
-          </div>
+        {/* Filters - Now at top for all screen sizes */}
+        <div className="mb-8">
+          <SearchFilters 
+            languages={allLanguages} 
+            areasOfExpertise={allAreasOfExpertise} 
+            memberships={allMemberships} 
+            selectedLanguages={filters.languages} 
+            selectedAreasOfExpertise={filters.areasOfExpertise} 
+            selectedMemberships={filters.memberships} 
+            onLanguageChange={languages => setFilters(prev => ({
+              ...prev,
+              languages
+            }))} 
+            onAreasOfExpertiseChange={areas => setFilters(prev => ({
+              ...prev,
+              areasOfExpertise: areas
+            }))} 
+            onMembershipsChange={memberships => setFilters(prev => ({
+              ...prev,
+              memberships
+            }))} 
+          />
+        </div>
 
-          {/* Results */}
-          <div className="lg:col-span-3">
-            {loading ? <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                <p className="text-muted-foreground mt-4">Searching...</p>
-              </div> : <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    {results.length} {results.length === 1 ? 'result' : 'results'} found
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                  {results.map(person => <TalentCard key={person.id} name={person.name} companyName={person.company_name || undefined} jobTitle={person.job_title || undefined} shortBio={person.short_bio || undefined} profilePictureUrl={person.profile_picture_url || undefined} keywords={person.keywords || []} socialMediaLinks={null} languages={person.languages || []} areasOfExpertise={person.areas_of_expertise || []} onClick={() => handleCardClick(person as any)} />)}
-                </div>
-                
-                {results.length === 0 && <div className="text-center py-12">
-                    <p className="text-muted-foreground">No results found. Try adjusting your search or filters.</p>
-                  </div>}
-              </div>}
-          </div>
+        {/* Results */}
+        <div>
+          {loading ? <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-muted-foreground mt-4">Searching...</p>
+            </div> : <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  {results.length} {results.length === 1 ? 'result' : 'results'} found
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {results.map(person => <TalentCard key={person.id} name={person.name} companyName={person.company_name || undefined} jobTitle={person.job_title || undefined} shortBio={person.short_bio || undefined} profilePictureUrl={person.profile_picture_url || undefined} keywords={person.keywords || []} socialMediaLinks={null} languages={person.languages || []} areasOfExpertise={person.areas_of_expertise || []} onClick={() => handleCardClick(person as any)} />)}
+              </div>
+              
+              {results.length === 0 && <div className="text-center py-12">
+                  <p className="text-muted-foreground">No results found. Try adjusting your search or filters.</p>
+                </div>}
+            </div>}
         </div>
       </div>
       
