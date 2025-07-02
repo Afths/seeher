@@ -131,7 +131,11 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (!isAdmin && !adminLoading) {
     return <Navigate to="/" replace />;
   }
 

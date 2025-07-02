@@ -44,6 +44,23 @@ export function TalentCard({
       .join(" ");
   };
 
+  const getPastelColor = (name: string) => {
+    const colors = [
+      'hsl(25, 70%, 85%)',   // pastel orange
+      'hsl(350, 70%, 85%)',  // pastel pink  
+      'hsl(270, 70%, 85%)',  // pastel violet
+      'hsl(120, 50%, 85%)'   // pastel green
+    ];
+    
+    // Use name to generate consistent color for same person
+    const hash = name.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
+    return colors[Math.abs(hash) % colors.length];
+  };
+
   const socialLinks = socialMediaLinks || {};
 
   return (
@@ -53,10 +70,13 @@ export function TalentCard({
     >
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <div className="w-32 h-32 flex-shrink-0">
+          <div className="w-40 h-40 flex-shrink-0">
             <Avatar className="w-full h-full border-2 border-border/20">
               <AvatarImage src={profilePictureUrl} alt={name} className="object-cover" />
-              <AvatarFallback className="bg-muted text-muted-foreground text-2xl font-medium">
+              <AvatarFallback 
+                className="text-2xl font-medium text-foreground/80"
+                style={{ backgroundColor: getPastelColor(name) }}
+              >
                 {getInitials(name)}
               </AvatarFallback>
             </Avatar>
