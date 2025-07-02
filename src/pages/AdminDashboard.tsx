@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useSuggestExpertise } from "@/hooks/useSuggestExpertise";
+import { useAdminSecurity } from "@/hooks/useAdminSecurity";
 import { Tables } from "@/integrations/supabase/types";
 
 type SubmissionType = Tables<"women">;
@@ -18,6 +19,7 @@ export default function AdminDashboard() {
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const { toast } = useToast();
   const { suggestExpertise, isLoading: isGeneratingExpertise } = useSuggestExpertise();
+  const { logAdminAction } = useAdminSecurity();
   const [submissions, setSubmissions] = useState<SubmissionType[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,6 +53,8 @@ export default function AdminDashboard() {
 
   const handleApprove = async (submission: SubmissionType) => {
     try {
+      logAdminAction("APPROVE_SUBMISSION", { submissionId: submission.id, submissionName: submission.name });
+      
       // Update status to APPROVED
       const { error: updateError } = await supabase
         .from("women")
@@ -94,6 +98,8 @@ export default function AdminDashboard() {
 
   const handleReject = async (submission: SubmissionType) => {
     try {
+      logAdminAction("REJECT_SUBMISSION", { submissionId: submission.id, submissionName: submission.name });
+      
       const { error } = await supabase
         .from("women")
         .update({ status: "NOT_APPROVED" })

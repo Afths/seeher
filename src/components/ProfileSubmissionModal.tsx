@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { profileSubmissionSchema, sanitizeInput, checkRateLimit } from "@/lib/validation";
+import { z } from "zod";
 
 interface ProfileSubmissionModalProps {
   isOpen: boolean;
@@ -22,6 +24,7 @@ interface ProfileSubmissionModalProps {
 export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionModalProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   const [formData, setFormData] = useState({
     name: "",
@@ -59,29 +62,62 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+
+    // Rate limiting check
+    const clientId = `${window.location.hostname}-${Date.now()}`;
+    if (!checkRateLimit(clientId, 3, 300000)) { // 3 requests per 5 minutes
+      toast({
+        title: "Rate limit exceeded",
+        description: "Please wait before submitting another profile.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setLoading(true);
     try {
+      // Prepare data for validation
+      const submissionData = {
+        name: sanitizeInput(formData.name),
+        email: formData.email,
+        job_title: formData.jobTitle ? sanitizeInput(formData.jobTitle) : undefined,
+        company_name: formData.companyName ? sanitizeInput(formData.companyName) : undefined,
+        nationality: formData.nationality ? sanitizeInput(formData.nationality) : undefined,
+        contact_number: formData.contactNumber || undefined,
+        alt_contact_name: formData.altContactName ? sanitizeInput(formData.altContactName) : undefined,
+        short_bio: formData.shortBio ? sanitizeInput(formData.shortBio) : undefined,
+        long_bio: formData.longBio ? sanitizeInput(formData.longBio) : undefined,
+        areas_of_expertise: areasOfExpertise.map(sanitizeInput),
+        languages: languages.map(sanitizeInput),
+        keywords: keywords.map(sanitizeInput),
+        memberships: memberships.map(sanitizeInput),
+        interested_in: formData.interestedIn as "speaker" | "panelist" | "board member",
+        consent: true
+      };
+
+      // Validate the data
+      const validatedData = profileSubmissionSchema.parse(submissionData);
       const { error } = await supabase
         .from("women")
         .insert({
           user_id: null, // No user account yet, will be set when approved
-          name: formData.name,
-          email: formData.email,
-          job_title: formData.jobTitle,
-          company_name: formData.companyName,
-          short_bio: formData.shortBio,
-          long_bio: formData.longBio,
-          nationality: formData.nationality,
-          contact_number: formData.contactNumber,
-          alt_contact_name: formData.altContactName,
-          interested_in: formData.interestedIn,
+          name: validatedData.name,
+          email: validatedData.email,
+          job_title: validatedData.job_title,
+          company_name: validatedData.company_name,
+          short_bio: validatedData.short_bio,
+          long_bio: validatedData.long_bio,
+          nationality: validatedData.nationality,
+          contact_number: validatedData.contact_number,
+          alt_contact_name: validatedData.alt_contact_name,
+          interested_in: validatedData.interested_in,
           profile_picture_url: formData.profilePictureUrl,
-          languages,
-          areas_of_expertise: areasOfExpertise,
-          memberships,
-          keywords,
-          consent: true,
+          languages: validatedData.languages,
+          areas_of_expertise: validatedData.areas_of_expertise,
+          memberships: validatedData.memberships,
+          keywords: validatedData.keywords,
+          consent: validatedData.consent,
           status: 'PENDING_APPROVAL'
         });
 
@@ -94,12 +130,27 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
       
       onClose();
     } catch (error) {
-      console.error("Error submitting profile:", error);
-      toast({
-        title: "Error submitting profile",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path.length > 0) {
+            fieldErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+        toast({
+          title: "Validation Error",
+          description: "Please check the form for errors.",
+          variant: "destructive",
+        });
+      } else {
+        console.error("Error submitting profile:", error);
+        toast({
+          title: "Error submitting profile",
+          description: "Please try again later.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -121,7 +172,9 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 required
+                className={errors.name ? "border-destructive" : ""}
               />
+              {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
             </div>
             
             <div>
@@ -132,7 +185,9 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
+                className={errors.email ? "border-destructive" : ""}
               />
+              {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
             </div>
             
             <div>

@@ -1,8 +1,29 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
+import { searchFiltersSchema, sanitizeInput } from "@/lib/validation";
 
 type Woman = Tables<"women">;
+
+// Type for the public view (excludes sensitive fields)
+type WomanPublic = Pick<Woman, 
+  | "id" 
+  | "name" 
+  | "job_title" 
+  | "company_name" 
+  | "nationality" 
+  | "short_bio" 
+  | "long_bio" 
+  | "profile_picture_url" 
+  | "areas_of_expertise" 
+  | "languages" 
+  | "keywords" 
+  | "memberships" 
+  | "interested_in" 
+  | "created_at"
+> & {
+  status: string | null;
+};
 
 interface SearchFilters {
   interestedIn: string;
@@ -13,7 +34,7 @@ interface SearchFilters {
 }
 
 export function useTalentSearch() {
-  const [results, setResults] = useState<Woman[]>([]);
+  const [results, setResults] = useState<WomanPublic[]>([]);
   const [loading, setLoading] = useState(false);
   const [allLanguages, setAllLanguages] = useState<string[]>([]);
   const [allAreasOfExpertise, setAllAreasOfExpertise] = useState<string[]>([]);
@@ -30,7 +51,8 @@ export function useTalentSearch() {
   // Load filter options
   useEffect(() => {
     const loadFilterOptions = async () => {
-      const { data } = await supabase.from("women").select("languages, areas_of_expertise, memberships");
+      // Use direct table access for filter options (admin-level access needed)
+      const { data } = await supabase.from("women").select("languages, areas_of_expertise, memberships").eq("status", "APPROVED");
       
       if (data) {
         const languages = new Set<string>();
@@ -57,7 +79,11 @@ export function useTalentSearch() {
     setLoading(true);
     
     try {
-      let query = supabase.from("women").select("*");
+      // Validate search filters
+      const validatedFilters = searchFiltersSchema.parse(filters);
+      
+      // Use the secure public view that excludes sensitive data
+      let query = supabase.from("women_public").select("*");
       
       // Filter by interested_in (currently string, will be array later)
       if (filters.interestedIn) {
@@ -77,7 +103,7 @@ export function useTalentSearch() {
       
       // Apply text search across all relevant fields
       if (filters.searchTerm.trim()) {
-        const searchTerm = filters.searchTerm.toLowerCase();
+        const searchTerm = sanitizeInput(filters.searchTerm.toLowerCase());
         filteredResults = filteredResults.filter(item => {
           const matchesText = (
             item.long_bio?.toLowerCase().includes(searchTerm) ||
