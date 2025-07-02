@@ -67,7 +67,7 @@ export function TalentCard({
 
   return (
     <Card 
-      className="backdrop-blur-sm bg-card/80 border-border/40 rounded-2xl hover:shadow-lg transition-all duration-300 cursor-pointer" 
+      className="backdrop-blur-sm bg-card/80 border-border/40 rounded-2xl hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-500 ease-out cursor-pointer" 
       onClick={onClick}
     >
       <CardContent className="p-6">
@@ -92,7 +92,7 @@ export function TalentCard({
                   href={socialLinks.raw}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors ml-2"
+                  className="text-muted-foreground hover:text-primary hover:scale-110 transition-all duration-300 ease-out ml-2"
                 >
                   <Linkedin className="w-5 h-5" />
                 </a>
