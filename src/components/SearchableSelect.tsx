@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, X, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getLanguageFlag } from "@/lib/languageFlags";
 
 interface SearchableSelectProps {
   label: string;
@@ -194,7 +195,10 @@ export function SearchableSelect({
       {/* Selected items */}
       <div className="flex flex-wrap gap-1 mt-2">
         {selectedItems.map((item) => (
-          <Badge key={item} variant={variant} className="cursor-pointer">
+          <Badge key={item} variant={variant} className="cursor-pointer flex items-center gap-1">
+            {field === "languages" && (
+              <span className="text-sm">{getLanguageFlag(item)}</span>
+            )}
             {item}
             <X
               className="w-3 h-3 ml-1"
