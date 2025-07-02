@@ -79,7 +79,7 @@ const Index = () => {
         <div className="container mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <img src="/lovable-uploads/bcb785a6-c1d7-4598-8bfc-3c9b5f2a8ec7.png" alt="SeeHer Logo" className="h-12" />
+              <img src="/lovable-uploads/c78fd2de-1860-470e-826c-241b2a3a2f4f.png" alt="SeeHer Logo" className="h-12" />
             </div>
             
             <div className="flex items-center gap-4">
