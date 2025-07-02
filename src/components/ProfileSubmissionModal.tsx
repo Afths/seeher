@@ -208,6 +208,7 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => addItem(newLanguage, languages, setLanguages, setNewLanguage)}
               >
                 <Plus className="w-4 h-4" />
@@ -239,6 +240,7 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => addItem(newArea, areasOfExpertise, setAreasOfExpertise, setNewArea)}
               >
                 <Plus className="w-4 h-4" />
@@ -270,6 +272,7 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => addItem(newKeyword, keywords, setKeywords, setNewKeyword)}
               >
                 <Plus className="w-4 h-4" />
@@ -289,10 +292,10 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
           </div>
 
           <div className="flex gap-4 pt-6">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" size="sm" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" size="sm" disabled={loading}>
               {loading ? "Submitting..." : "Submit Profile"}
             </Button>
           </div>

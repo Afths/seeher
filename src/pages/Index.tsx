@@ -9,6 +9,7 @@ import { ProfileModal } from "@/components/ProfileModal";
 import { ProfileSubmissionModal } from "@/components/ProfileSubmissionModal";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Tables } from "@/integrations/supabase/types";
 import { Link } from "react-router-dom";
 type Woman = Tables<"women">;
@@ -27,6 +28,7 @@ const Index = () => {
     user,
     signOut
   } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const [searchInput, setSearchInput] = useState("");
   const [selectedWoman, setSelectedWoman] = useState<Woman | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -72,14 +74,30 @@ const Index = () => {
             </div>
             
             <div className="flex items-center gap-4">
-              <Button onClick={handleOpenSubmissionModal} className="rounded-xl">
+              <Button onClick={handleOpenSubmissionModal} size="sm" className="rounded-xl">
                 Submit Profile
               </Button>
-              {user && (
-                <Button variant="outline" onClick={signOut} className="rounded-xl">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </Button>
+              {user ? (
+                <>
+                  {isAdmin && (
+                    <Link to="/admin">
+                      <Button variant="secondary" size="sm" className="rounded-xl">
+                        Admin Dashboard
+                      </Button>
+                    </Link>
+                  )}
+                  <Button variant="outline" onClick={signOut} size="sm" className="rounded-xl">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Link to="/auth">
+                  <Button variant="outline" size="sm" className="rounded-xl">
+                    <User className="w-4 h-4 mr-2" />
+                    Sign In
+                  </Button>
+                </Link>
               )}
             </div>
           </div>
@@ -107,7 +125,7 @@ const Index = () => {
                 <Input placeholder="Search by name, bio, expertise, keywords..." value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyPress={handleKeyPress} className="bg-card/50 backdrop-blur-sm border-border/40 rounded-xl pl-4 pr-12" />
                 <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               </div>
-              <Button onClick={handleSearch} className="rounded-xl px-6" disabled={loading}>
+              <Button onClick={handleSearch} size="sm" className="rounded-xl px-6" disabled={loading}>
                 Search
               </Button>
             </div>
