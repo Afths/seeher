@@ -99,8 +99,7 @@ const Index = () => {
                   </Button>
                 </>
               ) : (
-                <Button variant="outline" onClick={handleOpenSignInModal} size="sm" className="rounded-xl">
-                  <User className="w-4 h-4 mr-2" />
+                  <Button variant="outline" onClick={handleOpenSignInModal} size="sm" className="rounded-xl">
                   Sign In
                 </Button>
               )}
@@ -116,9 +115,9 @@ const Index = () => {
           <div className="flex justify-center">
             <Tabs value={filters.interestedIn} onValueChange={handleTabChange}>
               <TabsList className="bg-card/50 backdrop-blur-sm border border-border/40 rounded-xl p-1">
-                <TabsTrigger value="speaker" className="rounded-lg">Speaker</TabsTrigger>
-                <TabsTrigger value="panelist" className="rounded-lg">Panelist</TabsTrigger>
-                <TabsTrigger value="board member" className="rounded-lg">Board Member</TabsTrigger>
+                <TabsTrigger value="speaker" className="rounded-lg text-sm font-medium uppercase">SPEAKER</TabsTrigger>
+                <TabsTrigger value="panelist" className="rounded-lg text-sm font-medium uppercase">PANELIST</TabsTrigger>
+                <TabsTrigger value="board member" className="rounded-lg text-sm font-medium uppercase">BOARD MEMBER</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -166,7 +165,7 @@ const Index = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                  {results.map(person => <TalentCard key={person.id} name={person.name} companyName={person.company_name || undefined} jobTitle={person.job_title || undefined} shortBio={person.short_bio || undefined} profilePictureUrl={person.profile_picture_url || undefined} keywords={person.keywords || []} socialMediaLinks={person.social_media_links} languages={person.languages || []} onClick={() => handleCardClick(person)} />)}
+                  {results.map(person => <TalentCard key={person.id} name={person.name} companyName={person.company_name || undefined} jobTitle={person.job_title || undefined} shortBio={person.short_bio || undefined} profilePictureUrl={person.profile_picture_url || undefined} keywords={person.keywords || []} socialMediaLinks={person.social_media_links} languages={person.languages || []} areasOfExpertise={person.areas_of_expertise || []} onClick={() => handleCardClick(person)} />)}
                 </div>
                 
                 {results.length === 0 && <div className="text-center py-12">

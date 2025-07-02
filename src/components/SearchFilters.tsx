@@ -65,14 +65,13 @@ export function SearchFilters({
     onToggle: (option: string) => void;
   }) => (
     <div>
-      <h4 className="text-xs font-medium text-foreground mb-3">{title}</h4>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button 
             variant="outline" 
             className="w-full justify-between bg-background/50 border-border/40"
           >
-            <span className="text-sm">
+            <span className="text-xs font-medium">
               {selectedOptions.length === 0 
                 ? title 
                 : `${selectedOptions.length} selected`

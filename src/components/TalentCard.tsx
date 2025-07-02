@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ExternalLink } from "lucide-react";
+import { Linkedin } from "lucide-react";
 
 interface TalentCardProps {
   name: string;
@@ -12,6 +12,7 @@ interface TalentCardProps {
   keywords?: string[];
   socialMediaLinks?: any;
   languages?: string[];
+  areasOfExpertise?: string[];
   onClick?: () => void;
 }
 
@@ -24,6 +25,7 @@ export function TalentCard({
   keywords = [],
   socialMediaLinks,
   languages = [],
+  areasOfExpertise = [],
   onClick
 }: TalentCardProps) {
   const getInitials = (name: string) => {
@@ -35,6 +37,13 @@ export function TalentCard({
       .slice(0, 2);
   };
 
+  const formatName = (name: string) => {
+    return name
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   const socialLinks = socialMediaLinks || {};
 
   return (
@@ -44,24 +53,56 @@ export function TalentCard({
     >
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <Avatar className="w-16 h-16 border-2 border-border/20">
+          <Avatar className="w-32 h-32 border-2 border-border/20">
             <AvatarImage src={profilePictureUrl} alt={name} />
-            <AvatarFallback className="bg-muted text-muted-foreground text-lg font-medium">
+            <AvatarFallback className="bg-muted text-muted-foreground text-2xl font-medium">
               {getInitials(name)}
             </AvatarFallback>
           </Avatar>
           
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-foreground mb-1">{name}</h3>
+            <div className="flex items-start justify-between mb-1">
+              <h3 className="text-lg font-semibold text-foreground">{formatName(name)}</h3>
+              {socialLinks.linkedin && (
+                <a
+                  href={socialLinks.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Linkedin className="w-5 h-5" />
+                </a>
+              )}
+            </div>
+            
             {jobTitle && (
-              <p className="text-sm text-muted-foreground mb-1">
+              <p className="text-sm text-muted-foreground mb-2">
                 {jobTitle}
                 {companyName && ` at ${companyName}`}
               </p>
             )}
+
+            {areasOfExpertise.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-3">
+                {areasOfExpertise.slice(0, 3).map((area, index) => (
+                  <Badge 
+                    key={index} 
+                    variant="secondary"
+                    className="text-xs bg-secondary/50 text-secondary-foreground border-0 rounded-full"
+                  >
+                    {area}
+                  </Badge>
+                ))}
+                {areasOfExpertise.length > 3 && (
+                  <Badge variant="outline" className="text-xs rounded-full">
+                    +{areasOfExpertise.length - 3}
+                  </Badge>
+                )}
+              </div>
+            )}
             
             {shortBio && (
-              <p className="text-sm text-foreground/80 mb-3 line-clamp-2">
+              <p className="text-sm text-foreground/80 mb-3 line-clamp-3">
                 {shortBio}
               </p>
             )}
@@ -71,8 +112,8 @@ export function TalentCard({
                 {keywords.slice(0, 4).map((keyword, index) => (
                   <Badge 
                     key={index} 
-                    variant="secondary"
-                    className="text-xs bg-secondary/50 text-secondary-foreground border-0 rounded-full"
+                    variant="outline"
+                    className="text-xs rounded-full"
                   >
                     {keyword}
                   </Badge>
@@ -95,22 +136,6 @@ export function TalentCard({
                   ))}
                 </div>
               )}
-              
-              <div className="flex gap-2">
-                {Object.entries(socialLinks).map(([platform, url]) => (
-                  url && (
-                    <a
-                      key={platform}
-                      href={url as string}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  )
-                ))}
-              </div>
             </div>
           </div>
         </div>
