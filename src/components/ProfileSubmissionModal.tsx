@@ -8,7 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrayInputField } from "@/components/ArrayInputField";
+import { SearchableSelect } from "@/components/SearchableSelect";
+import { NationalitySelect } from "@/components/NationalitySelect";
 import { useProfileSubmission } from "@/hooks/useProfileSubmission";
 
 interface ProfileSubmissionModalProps {
@@ -122,14 +123,12 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="nationality">Nationality</Label>
-              <Input
-                id="nationality"
-                value={formData.nationality}
-                onChange={(e) => setFormData({...formData, nationality: e.target.value})}
-              />
-            </div>
+            <NationalitySelect
+              label="Nationality"
+              placeholder="Search or enter nationality..."
+              value={formData.nationality}
+              onChange={(value) => setFormData({...formData, nationality: value})}
+            />
             
             <div>
               <Label htmlFor="contactNumber">Contact Number</Label>
@@ -141,28 +140,31 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
             </div>
           </div>
 
-          <ArrayInputField
+          <SearchableSelect
             label="Languages"
-            placeholder="Add a language..."
-            items={languages}
+            placeholder="Search or add languages..."
+            selectedItems={languages}
             onItemsChange={setLanguages}
             variant="secondary"
+            field="languages"
           />
 
-          <ArrayInputField
+          <SearchableSelect
             label="Areas of Expertise"
-            placeholder="Add an area of expertise..."
-            items={areasOfExpertise}
+            placeholder="Search or add areas of expertise..."
+            selectedItems={areasOfExpertise}
             onItemsChange={setAreasOfExpertise}
             variant="secondary"
+            field="areas_of_expertise"
           />
 
-          <ArrayInputField
+          <SearchableSelect
             label="Keywords"
-            placeholder="Add a keyword..."
-            items={keywords}
+            placeholder="Search or add keywords..."
+            selectedItems={keywords}
             onItemsChange={setKeywords}
             variant="outline"
+            field="keywords"
           />
 
           <div className="flex gap-4 pt-6">
