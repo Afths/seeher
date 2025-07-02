@@ -13,24 +13,8 @@ import { useTalentSearch } from "@/hooks/useTalentSearch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Tables } from "@/integrations/supabase/types";
-
 type Woman = Tables<"women">;
-type WomanPublic = Pick<Woman, 
-  | "id" 
-  | "name" 
-  | "job_title" 
-  | "company_name" 
-  | "nationality" 
-  | "short_bio" 
-  | "long_bio" 
-  | "profile_picture_url" 
-  | "areas_of_expertise" 
-  | "languages" 
-  | "keywords" 
-  | "memberships" 
-  | "interested_in" 
-  | "created_at"
-> & {
+type WomanPublic = Pick<Woman, "id" | "name" | "job_title" | "company_name" | "nationality" | "short_bio" | "long_bio" | "profile_picture_url" | "areas_of_expertise" | "languages" | "keywords" | "memberships" | "interested_in" | "created_at"> & {
   status: string | null;
 };
 const Index = () => {
@@ -58,12 +42,9 @@ const Index = () => {
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const handleCardClick = async (woman: WomanPublic) => {
     // Fetch full profile data including sensitive fields for modal display
-    const { data: fullProfile } = await supabase
-      .from("women")
-      .select("*")
-      .eq("id", woman.id)
-      .single();
-    
+    const {
+      data: fullProfile
+    } = await supabase.from("women").select("*").eq("id", woman.id).single();
     if (fullProfile) {
       setSelectedWoman(fullProfile);
       setIsModalOpen(true);
@@ -105,7 +86,7 @@ const Index = () => {
   return <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-gradient-to-r from-background via-accent/30 to-background border-b border-border/40">
-        <div className="container mx-auto px-6 py-8">
+        <div className="container mx-auto px-6 py-[10px]">
           <div className="flex items-center justify-between">
             <div className="flex-1" />
             
@@ -165,26 +146,16 @@ const Index = () => {
 
         {/* Filters - Now at top for all screen sizes */}
         <div className="mb-8">
-          <SearchFilters 
-            languages={allLanguages} 
-            areasOfExpertise={allAreasOfExpertise} 
-            memberships={allMemberships} 
-            selectedLanguages={filters.languages} 
-            selectedAreasOfExpertise={filters.areasOfExpertise} 
-            selectedMemberships={filters.memberships} 
-            onLanguageChange={languages => setFilters(prev => ({
-              ...prev,
-              languages
-            }))} 
-            onAreasOfExpertiseChange={areas => setFilters(prev => ({
-              ...prev,
-              areasOfExpertise: areas
-            }))} 
-            onMembershipsChange={memberships => setFilters(prev => ({
-              ...prev,
-              memberships
-            }))} 
-          />
+          <SearchFilters languages={allLanguages} areasOfExpertise={allAreasOfExpertise} memberships={allMemberships} selectedLanguages={filters.languages} selectedAreasOfExpertise={filters.areasOfExpertise} selectedMemberships={filters.memberships} onLanguageChange={languages => setFilters(prev => ({
+          ...prev,
+          languages
+        }))} onAreasOfExpertiseChange={areas => setFilters(prev => ({
+          ...prev,
+          areasOfExpertise: areas
+        }))} onMembershipsChange={memberships => setFilters(prev => ({
+          ...prev,
+          memberships
+        }))} />
         </div>
 
         {/* Results */}
