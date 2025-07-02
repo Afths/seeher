@@ -74,7 +74,7 @@ export function SearchFilters({
           >
             <span className="text-sm">
               {selectedOptions.length === 0 
-                ? `Select ${title.toLowerCase()}` 
+                ? title 
                 : `${selectedOptions.length} selected`
               }
             </span>
