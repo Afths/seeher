@@ -14,8 +14,9 @@ interface FormData {
   nationality: string;
   contactNumber: string;
   altContactName: string;
-  interestedIn: string;
+  interestedIn: string[];
   profilePictureUrl: string;
+  consent: boolean;
 }
 
 export function useProfileSubmission() {
@@ -33,8 +34,9 @@ export function useProfileSubmission() {
     nationality: "",
     contactNumber: "",
     altContactName: "",
-    interestedIn: "speaker",
+    interestedIn: [],
     profilePictureUrl: "",
+    consent: false,
   });
 
   const [languages, setLanguages] = useState<string[]>([]);
@@ -53,8 +55,9 @@ export function useProfileSubmission() {
       nationality: "",
       contactNumber: "",
       altContactName: "",
-      interestedIn: "speaker",
+      interestedIn: [],
       profilePictureUrl: "",
+      consent: false,
     });
     setLanguages([]);
     setAreasOfExpertise([]);
@@ -95,8 +98,8 @@ export function useProfileSubmission() {
         languages: languages.map(sanitizeInput),
         keywords: keywords.map(sanitizeInput),
         memberships: memberships.map(sanitizeInput),
-        interested_in: [formData.interestedIn] as string[],
-        consent: true
+        interested_in: formData.interestedIn,
+        consent: formData.consent
       };
 
       // Validate the data

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -178,6 +179,53 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
             variant="outline"
             field="keywords"
           />
+
+          <div className="space-y-4">
+            <Label>Interested In *</Label>
+            <div className="space-y-3">
+              {["speaker", "board member", "panelist"].map((role) => (
+                <div key={role} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={role}
+                    checked={formData.interestedIn.includes(role)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setFormData({
+                          ...formData,
+                          interestedIn: [...formData.interestedIn, role]
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          interestedIn: formData.interestedIn.filter(item => item !== role)
+                        });
+                      }
+                    }}
+                    className={errors.interested_in ? "border-destructive" : ""}
+                  />
+                  <Label htmlFor={role} className="capitalize">
+                    {role}
+                  </Label>
+                </div>
+              ))}
+            </div>
+            {errors.interested_in && <p className="text-sm text-destructive mt-1">{errors.interested_in}</p>}
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="consent"
+              checked={formData.consent}
+              onCheckedChange={(checked) => 
+                setFormData({...formData, consent: checked as boolean})
+              }
+              className={errors.consent ? "border-destructive" : ""}
+            />
+            <Label htmlFor="consent">
+              I agree to the privacy policy and terms and conditions *
+            </Label>
+            {errors.consent && <p className="text-sm text-destructive ml-6">{errors.consent}</p>}
+          </div>
 
           <div className="flex gap-4 pt-6">
             <Button type="button" variant="outline" size="sm" onClick={handleClose}>
