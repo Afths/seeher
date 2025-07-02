@@ -7,11 +7,11 @@ import { TalentCard } from "@/components/TalentCard";
 import { SearchFilters } from "@/components/SearchFilters";
 import { ProfileModal } from "@/components/ProfileModal";
 import { ProfileSubmissionModal } from "@/components/ProfileSubmissionModal";
+import { SignInModal } from "@/components/SignInModal";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Tables } from "@/integrations/supabase/types";
-import { Link } from "react-router-dom";
 type Woman = Tables<"women">;
 const Index = () => {
   const {
@@ -33,6 +33,7 @@ const Index = () => {
   const [selectedWoman, setSelectedWoman] = useState<Woman | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const handleCardClick = (woman: Woman) => {
     setSelectedWoman(woman);
     setIsModalOpen(true);
@@ -46,6 +47,14 @@ const Index = () => {
   };
   const handleCloseSubmissionModal = () => {
     setIsSubmissionModalOpen(false);
+  };
+
+  const handleOpenSignInModal = () => {
+    setIsSignInModalOpen(true);
+  };
+
+  const handleCloseSignInModal = () => {
+    setIsSignInModalOpen(false);
   };
   const handleSearch = () => {
     setFilters(prev => ({
@@ -80,11 +89,9 @@ const Index = () => {
               {user ? (
                 <>
                   {isAdmin && (
-                    <Link to="/admin">
-                      <Button variant="secondary" size="sm" className="rounded-xl">
-                        Admin Dashboard
-                      </Button>
-                    </Link>
+                    <Button variant="secondary" size="sm" className="rounded-xl" onClick={() => window.location.href = '/admin'}>
+                      Admin Dashboard
+                    </Button>
                   )}
                   <Button variant="outline" onClick={signOut} size="sm" className="rounded-xl">
                     <LogOut className="w-4 h-4 mr-2" />
@@ -92,12 +99,10 @@ const Index = () => {
                   </Button>
                 </>
               ) : (
-                <Link to="/auth">
-                  <Button variant="outline" size="sm" className="rounded-xl">
-                    <User className="w-4 h-4 mr-2" />
-                    Sign In
-                  </Button>
-                </Link>
+                <Button variant="outline" onClick={handleOpenSignInModal} size="sm" className="rounded-xl">
+                  <User className="w-4 h-4 mr-2" />
+                  Sign In
+                </Button>
               )}
             </div>
           </div>
@@ -175,6 +180,8 @@ const Index = () => {
       <ProfileModal isOpen={isModalOpen} onClose={handleCloseModal} woman={selectedWoman} />
       
       <ProfileSubmissionModal isOpen={isSubmissionModalOpen} onClose={handleCloseSubmissionModal} />
+      
+      <SignInModal isOpen={isSignInModalOpen} onClose={handleCloseSignInModal} />
     </div>;
 };
 export default Index;
