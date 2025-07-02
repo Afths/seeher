@@ -67,26 +67,20 @@ const Index = () => {
       <div className="bg-gradient-to-r from-background via-accent/30 to-background border-b border-border/40">
         <div className="container mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-semibold text-foreground mb-2">Talent Spotlight</h1>
-              
+            <div className="flex items-center">
+              <img src="/lovable-uploads/bcb785a6-c1d7-4598-8bfc-3c9b5f2a8ec7.png" alt="SeeHer Logo" className="h-12" />
             </div>
             
             <div className="flex items-center gap-4">
-              {user ? <>
-                  <Button onClick={handleOpenSubmissionModal} className="rounded-xl">
-                    Submit Profile
-                  </Button>
-                  <Button variant="outline" onClick={signOut} className="rounded-xl">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </> : <Link to="/auth">
-                  <Button variant="outline" className="rounded-xl">
-                    <User className="w-4 h-4 mr-2" />
-                    Sign In
-                  </Button>
-                </Link>}
+              <Button onClick={handleOpenSubmissionModal} className="rounded-xl">
+                Submit Profile
+              </Button>
+              {user && (
+                <Button variant="outline" onClick={signOut} className="rounded-xl">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              )}
             </div>
           </div>
         </div>

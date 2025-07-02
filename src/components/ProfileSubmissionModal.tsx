@@ -12,7 +12,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProfileSubmissionModalProps {
@@ -21,7 +20,6 @@ interface ProfileSubmissionModalProps {
 }
 
 export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionModalProps) {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   
@@ -61,14 +59,13 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
 
     setLoading(true);
     try {
       const { error } = await supabase
         .from("women")
         .insert({
-          user_id: user.id,
+          user_id: null, // No user account yet, will be set when approved
           name: formData.name,
           email: formData.email,
           job_title: formData.jobTitle,
