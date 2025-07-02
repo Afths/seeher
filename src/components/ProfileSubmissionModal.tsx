@@ -124,8 +124,7 @@ export function ProfileSubmissionModal({ isOpen, onClose }: ProfileSubmissionMod
       if (error) throw error;
 
       toast({
-        title: "Profile submitted successfully!",
-        description: "Your profile is now pending approval and will be reviewed soon.",
+        title: "Thank you for being here. Your profile is being reviewed. We get in touch as soon as we get to it - typically 1-2 weeks. 🤍",
       });
       
       onClose();
