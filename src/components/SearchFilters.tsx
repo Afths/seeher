@@ -1,3 +1,20 @@
+/**
+ * SEARCH FILTERS COMPONENT
+ *
+ * Provides advanced filtering options for the talent search functionality.
+ * Allows users to filter profiles by:
+ * - Languages (multi-select)
+ * - Areas of Expertise (multi-select)
+ * - Memberships (multi-select)
+ *
+ * Features:
+ * - Dropdown menus with checkboxes for each filter type
+ * - Visual badges showing selected filters
+ * - "OR" logic between selected items (shows profiles matching ANY selected item)
+ * - Click badges to remove filters
+ * - Responsive grid layout (1 column on mobile, 3 columns on desktop)
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,34 +47,50 @@ export function SearchFilters({
   selectedMemberships,
   onLanguageChange,
   onAreasOfExpertiseChange,
-  onMembershipsChange
+	onMembershipsChange,
 }: SearchFiltersProps) {
+	/**
+	 * Handle toggling a language filter
+	 * Adds language if not selected, removes if already selected
+	 */
   const handleLanguageToggle = (language: string) => {
-    const updated = selectedLanguages.includes(language)
-      ? selectedLanguages.filter(l => l !== language)
+		const updatedLanguages = selectedLanguages.includes(language)
+			? selectedLanguages.filter((l) => l !== language)
       : [...selectedLanguages, language];
-    onLanguageChange(updated);
+		onLanguageChange(updatedLanguages);
   };
 
+	/**
+	 * Handle toggling an area of expertise filter
+	 * Adds area if not selected, removes if already selected
+	 */
   const handleAreaToggle = (area: string) => {
-    const updated = selectedAreasOfExpertise.includes(area)
-      ? selectedAreasOfExpertise.filter(a => a !== area)
+		const updatedAreasOfExpertise = selectedAreasOfExpertise.includes(area)
+			? selectedAreasOfExpertise.filter((a) => a !== area)
       : [...selectedAreasOfExpertise, area];
-    onAreasOfExpertiseChange(updated);
+		onAreasOfExpertiseChange(updatedAreasOfExpertise);
   };
 
+	/**
+	 * Handle toggling a membership filter
+	 * Adds membership if not selected, removes if already selected
+	 */
   const handleMembershipToggle = (membership: string) => {
-    const updated = selectedMemberships.includes(membership)
-      ? selectedMemberships.filter(m => m !== membership)
+		const updatedMemberships = selectedMemberships.includes(membership)
+			? selectedMemberships.filter((m) => m !== membership)
       : [...selectedMemberships, membership];
-    onMembershipsChange(updated);
+		onMembershipsChange(updatedMemberships);
   };
 
+	/**
+	 * Reusable dropdown component for filter selection
+	 * Displays a button showing selected count, dropdown with checkboxes, and selected badges
+	 */
   const FilterDropdown = ({ 
     title, 
     options, 
     selectedOptions, 
-    onToggle 
+		onToggle,
   }: {
     title: string;
     options: string[];
@@ -65,6 +98,7 @@ export function SearchFilters({
     onToggle: (option: string) => void;
   }) => (
     <div>
+			{/* Dropdown trigger button - shows filter title or count of selected items */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button 
@@ -74,12 +108,12 @@ export function SearchFilters({
             <span className="text-xs font-medium">
               {selectedOptions.length === 0 
                 ? title 
-                : `${selectedOptions.length} selected`
-              }
+								: `${selectedOptions.length} selected`}
             </span>
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
+				{/* Dropdown content with checkbox list */}
         <DropdownMenuContent 
           className="w-64 max-h-96 overflow-y-auto bg-background border-border/40"
           align="start"
@@ -103,6 +137,7 @@ export function SearchFilters({
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
+			{/* Selected filter badges - click to remove */}
       {selectedOptions.length > 0 && (
         <div className="flex flex-wrap items-center gap-1 mt-2">
           {selectedOptions.map((option, index) => (
@@ -114,8 +149,11 @@ export function SearchFilters({
               >
                 {option} ×
               </Badge>
+							{/* "OR" separator between multiple selections */}
               {index < selectedOptions.length - 1 && (
-                <span className="text-xs text-muted-foreground font-medium">OR</span>
+								<span className="text-xs text-muted-foreground font-medium">
+									OR
+								</span>
               )}
             </div>
           ))}
@@ -127,7 +165,9 @@ export function SearchFilters({
   return (
     <Card className="backdrop-blur-sm bg-card/80 border-border/40 rounded-2xl">
       <CardContent className="pt-6">
+				{/* Responsive grid: 1 column on mobile, 3 columns on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					{/* Languages filter dropdown */}
           {languages.length > 0 && (
             <FilterDropdown
               title="LANGUAGES"
@@ -137,6 +177,7 @@ export function SearchFilters({
             />
           )}
 
+					{/* Areas of Expertise filter dropdown */}
           {areasOfExpertise.length > 0 && (
             <FilterDropdown
               title="AREAS OF EXPERTISE"
@@ -146,6 +187,7 @@ export function SearchFilters({
             />
           )}
 
+					{/* Memberships filter dropdown */}
           {memberships.length > 0 && (
             <FilterDropdown
               title="MEMBERSHIPS"

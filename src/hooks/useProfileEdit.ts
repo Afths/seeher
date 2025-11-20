@@ -1,0 +1,325 @@
+/**
+ * Hook that manages the editing of a user's own profile.
+ * Allows authenticated users to fetch and update their own profile data.
+ *
+ * Features:
+ * - Fetches user's own profile (if it exists) from database (using user_id)
+ * - Pre-populates form with existing profile data
+ * - Updates profile with validation
+ * - Handles profile picture upload/replacement
+ * - Error handling and loading states
+ *
+ * Security:
+ * - Only fetches profiles where user_id matches authenticated user
+ * - Database RLS policies ensure users can only edit their own profiles
+ * - Users cannot change status or created_at fields (admin-only)
+ */
+
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
+import { profileUpdateSchema, sanitizeInput } from "@/lib/validation";
+import { z } from "zod";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface ProfileFormData {
+	name: string;
+	email: string;
+	jobTitle: string;
+	companyName: string;
+	shortBio: string;
+	longBio: string;
+	nationality: string;
+	contactNumber: string;
+	altContactName: string;
+	interestedIn: string[];
+	profilePictureUrl: string;
+	// Note: consent is not included - it's only set once during initial submission
+}
+
+export function useProfileEdit() {
+	const { user } = useAuth();
+	const [loading, setLoading] = useState<boolean>(false);
+	const [loadingProfile, setLoadingProfile] = useState<boolean>(false);
+	const [errors, setErrors] = useState<Record<string, string>>({});
+	const [profileId, setProfileId] = useState<string | null>(null);
+
+	// Form state (same structure as profile submission form)
+	// Note: The values that remain empty (i.e. ""), will be converted to null for the database
+	const [formData, setFormData] = useState<ProfileFormData>({
+		name: "",
+		email: "",
+		jobTitle: "",
+		companyName: "",
+		shortBio: "",
+		longBio: "",
+		nationality: "",
+		contactNumber: "",
+		altContactName: "",
+		interestedIn: [],
+		profilePictureUrl: "",
+	});
+
+	const [languages, setLanguages] = useState<string[]>([]);
+	const [areasOfExpertise, setAreasOfExpertise] = useState<string[]>([]);
+	const [memberships, setMemberships] = useState<string[]>([]);
+	const [keywords, setKeywords] = useState<string[]>([]);
+
+	/**
+	 * Fetch user's own profile from database
+	 * Only fetches profiles where user_id matches the authenticated user
+	 * Pre-populates form with existing data
+	 */
+	const fetchProfile = async () => {
+		setLoadingProfile(true);
+
+		try {
+			// Fetch profile where user_id matches authenticated user
+			// RLS policy ensures users can only see their own profiles
+			// If multiple profiles exist (shouldn't happen, but handle gracefully), get the most recent one
+			const { data, error } = await supabase
+				.from("women")
+				.select("*")
+				.eq("user_id", user!.id)
+				.in("status", ["APPROVED", "PENDING_APPROVAL"]) // Only fetch approved or pending profiles (not rejected)
+				.order("created_at", { ascending: false }) // Most recent first
+				.limit(1) // Only get one row
+				.maybeSingle(); // Returns null if no profile found (`single()` would throw error)
+
+			if (error) {
+				console.error("[useProfileEdit] ❌ Error fetching profile:", error);
+				toast.error("Failed to load profile. Please try again.");
+				throw error;
+			}
+
+			if (!data) {
+				toast.warning("No matching profile found. Please submit a profile first.");
+				return;
+			}
+
+			// Store profile ID for updates
+			setProfileId(data.id);
+
+			// Pre-populate form with existing profile data
+			// If any field is null, we set it to empty
+			setFormData({
+				name: data.name,
+				email: data.email || "",
+				jobTitle: data.job_title || "",
+				companyName: data.company_name || "",
+				shortBio: data.short_bio || "",
+				longBio: data.long_bio || "",
+				nationality: data.nationality || "",
+				contactNumber: data.contact_number || "",
+				altContactName: data.alt_contact_name || "",
+				interestedIn: Array.isArray(data.interested_in) ? data.interested_in : [],
+				profilePictureUrl: data.profile_picture_url || "",
+			});
+
+			// Pre-populate array fields
+			setLanguages(Array.isArray(data.languages) ? data.languages : []);
+			setAreasOfExpertise(
+				Array.isArray(data.areas_of_expertise) ? data.areas_of_expertise : []
+			);
+			setMemberships(Array.isArray(data.memberships) ? data.memberships : []);
+			setKeywords(Array.isArray(data.keywords) ? data.keywords : []);
+
+			return true;
+		} catch (error) {
+			console.error("[useProfileEdit] ❌ Error fetching profile:", error);
+			toast.error("Failed to load profile. Please try again.");
+			return false;
+		} finally {
+			setLoadingProfile(false);
+		}
+	};
+
+	/**
+	 * Handle profile update submission - update existing profile in database
+	 */
+	const handleUpdate = async (e: React.FormEvent, profilePicture: File | null) => {
+		e.preventDefault();
+		setErrors({});
+
+		if (!profileId) {
+			toast.error("Profile not loaded. Please try again.");
+			return false;
+		}
+
+		setLoading(true);
+
+		try {
+			let profilePictureUrl = formData.profilePictureUrl;
+
+			/**
+			 * STEP 1: Upload profile picture to Supabase Storage (if provided)
+			 *
+			 * Uploads new image file to "profiles" storage bucket and gets public URL.
+			 * If user uploads new picture, it replaces the old one.
+			 * The URL is then stored in the database for display.
+			 */
+			if (profilePicture) {
+				const fileExt = profilePicture.name.split(".").pop();
+				const fileName = `${Math.random()}.${fileExt}`;
+				const filePath = `${fileName}`;
+
+				// Upload the new profile picture to the 'profiles' storage bucket
+				const { error: uploadError } = await supabase.storage
+					.from("profiles")
+					.upload(filePath, profilePicture);
+
+				if (uploadError) {
+					throw new Error(`Failed to upload image: ${uploadError.message}`);
+				}
+
+				// Get the public URL of the new profile picture
+				const {
+					data: { publicUrl },
+				} = supabase.storage.from("profiles").getPublicUrl(filePath);
+
+				profilePictureUrl = publicUrl;
+			}
+
+			/**
+			 * STEP 2: Prepare and sanitize form data for validation
+			 *
+			 * Sanitizes all text inputs to prevent XSS attacks.
+			 * Maps form data to database schema format.
+			 * Note: profile_picture_url is not in validation schema, handled separately.
+			 * Note: We don't update status, created_at, or user_id (protected fields).
+			 */
+			const updateData = {
+				name: sanitizeInput(formData.name),
+				email: sanitizeInput(formData.email),
+				job_title: sanitizeInput(formData.jobTitle),
+				company_name: sanitizeInput(formData.companyName),
+				nationality: sanitizeInput(formData.nationality),
+				contact_number: sanitizeInput(formData.contactNumber),
+				alt_contact_name: sanitizeInput(formData.altContactName),
+				short_bio: sanitizeInput(formData.shortBio),
+				long_bio: sanitizeInput(formData.longBio),
+				areas_of_expertise: areasOfExpertise.map((item) => sanitizeInput(item)),
+				languages: languages.map((item) => sanitizeInput(item)),
+				keywords: keywords
+					.filter((item) => item.trim() !== "")
+					.map((item) => sanitizeInput(item)),
+				memberships: memberships
+					.filter((item) => item.trim() !== "")
+					.map((item) => sanitizeInput(item)),
+				interested_in: formData.interestedIn,
+			};
+
+			/**
+			 * STEP 3: Validate data using Zod schema
+			 *
+			 * Ensures all required fields are present and valid.
+			 * Throws ZodError if validation fails (caught in catch block).
+			 */
+			const validatedData = profileUpdateSchema.parse(updateData);
+
+			/**
+			 * STEP 4: Update existing profile in database
+			 *
+			 * Updates profile with validated data.
+			 * RLS policy ensures users can only update their own profiles.
+			 * Only updates fields that users are allowed to change (not status, created_at, user_id).
+			 *
+			 * Note: We convert undefined to null for optional fields to match the database schema.
+			 */
+			const { error } = await supabase
+				.from("women")
+				.update({
+					name: validatedData.name,
+					email: validatedData.email,
+					job_title: validatedData.job_title,
+					company_name: validatedData.company_name ?? null,
+					short_bio: validatedData.short_bio,
+					long_bio: validatedData.long_bio ?? null,
+					nationality: validatedData.nationality,
+					contact_number: validatedData.contact_number ?? null,
+					alt_contact_name: validatedData.alt_contact_name ?? null,
+					interested_in: validatedData.interested_in,
+					profile_picture_url: profilePictureUrl || null,
+					languages: validatedData.languages,
+					areas_of_expertise: validatedData.areas_of_expertise,
+					memberships: validatedData.memberships,
+					keywords: validatedData.keywords,
+					// Note: consent is not updated - it's only set once during initial submission
+				})
+				.eq("id", profileId)
+				.eq("user_id", user!.id);
+
+			if (error) throw error;
+
+			console.log("[useProfileEdit] ✅ Profile updated successfully!");
+			toast.success("Profile updated successfully!");
+			return true;
+		} catch (error) {
+			if (error instanceof z.ZodError) {
+				const fieldErrors: Record<string, string> = {};
+				error.errors.forEach((err) => {
+					if (err.path.length > 0) {
+						fieldErrors[err.path[0] as string] = err.message;
+					}
+				});
+				setErrors(fieldErrors);
+				// Log validation errors for debugging
+				console.error("[useProfileEdit] ❌ Validation errors:", fieldErrors);
+				console.error("[useProfileEdit] ❌ Full Zod error:", error.errors);
+				toast.error("Validation Error: Please check the form for errors.");
+			} else {
+				console.error("[useProfileEdit] ❌ Error updating profile:", error);
+				toast.error("Error updating profile. Please try again later.");
+			}
+			return false;
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	/**
+	 * Reset form to empty state
+	 * All fields reset to empty strings (form convention)
+	 */
+	const resetForm = () => {
+		setFormData({
+			name: "",
+			email: "",
+			jobTitle: "",
+			companyName: "",
+			shortBio: "",
+			longBio: "",
+			nationality: "",
+			contactNumber: "",
+			altContactName: "",
+			interestedIn: [],
+			profilePictureUrl: "",
+		});
+		setLanguages([]);
+		setAreasOfExpertise([]);
+		setMemberships([]);
+		setKeywords([]);
+		setErrors({});
+		setProfileId(null);
+	};
+
+	return {
+		formData,
+		setFormData,
+		languages,
+		setLanguages,
+		areasOfExpertise,
+		setAreasOfExpertise,
+		memberships,
+		setMemberships,
+		keywords,
+		setKeywords,
+		loading,
+		loadingProfile,
+		errors,
+		profileId,
+		fetchProfile,
+		handleUpdate,
+		resetForm,
+	};
+}

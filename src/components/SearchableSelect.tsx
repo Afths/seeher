@@ -1,3 +1,26 @@
+/**
+ * SEARCHABLE SELECT COMPONENT
+ *
+ * A reusable multi-select component with search functionality.
+ * Used for selecting languages, areas of expertise, keywords, and nationality.
+ *
+ * Features:
+ * - Search/filter existing options from database
+ * - Add new custom values by typing and pressing Enter
+ * - Keyboard navigation (Arrow keys, Enter, Escape)
+ * - Click outside to close dropdown
+ * - Visual badges for selected items
+ * - Language flags for language selections
+ * - Fetches options from approved profiles in database
+ *
+ * Supports multiple field types:
+ * - languages: Array of strings (multi-select)
+ * - areas_of_expertise: Array of strings (multi-select)
+ * - keywords: Array of strings (multi-select)
+ * - memberships: Array of strings (multi-select)
+ * - nationality: Single string (single-select)
+ */
+
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +36,7 @@ interface SearchableSelectProps {
   selectedItems: string[];
   onItemsChange: (items: string[]) => void;
   variant?: "secondary" | "outline";
-  field: "languages" | "areas_of_expertise" | "keywords" | "nationality";
+  field: "languages" | "areas_of_expertise" | "keywords" | "memberships" | "nationality";
 }
 
 export function SearchableSelect({ 
@@ -24,15 +47,29 @@ export function SearchableSelect({
   variant = "secondary",
   field 
 }: SearchableSelectProps) {
+  // Search input state
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Available options fetched from database
   const [availableOptions, setAvailableOptions] = useState<string[]>([]);
+  
+  // Filtered options based on search term
   const [filteredOptions, setFilteredOptions] = useState<string[]>([]);
+  
+  // Dropdown open/close state
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Keyboard navigation - highlighted option index
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  
+  // Refs for input and dropdown elements
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch existing options from database
+  /**
+   * Fetch existing options from database
+   * Loads all unique values from approved profiles for the specified field
+   */
   useEffect(() => {
     const fetchOptions = async () => {
       const { data } = await supabase
@@ -64,7 +101,10 @@ export function SearchableSelect({
     fetchOptions();
   }, [field]);
 
-  // Filter options based on search term
+  /**
+   * Filter options based on search term
+   * Excludes already selected items from filtered results
+   */
   useEffect(() => {
     if (searchTerm) {
       const filtered = availableOptions.filter(option =>
@@ -79,6 +119,10 @@ export function SearchableSelect({
     }
   }, [searchTerm, availableOptions, selectedItems]);
 
+  /**
+   * Add item to selected items
+   * Trims whitespace and prevents duplicates
+   */
   const addItem = (item: string) => {
     if (item.trim() && !selectedItems.includes(item.trim())) {
       onItemsChange([...selectedItems, item.trim()]);
@@ -88,15 +132,28 @@ export function SearchableSelect({
     }
   };
 
+  /**
+   * Remove item from selected items
+   */
   const removeItem = (item: string) => {
     onItemsChange(selectedItems.filter(i => i !== item));
   };
 
+  /**
+   * Handle input change
+   * Opens dropdown when user starts typing
+   */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setIsOpen(true);
   };
 
+  /**
+   * Handle keyboard navigation
+   * - Enter: Add highlighted item or current search term
+   * - ArrowDown/ArrowUp: Navigate through options
+   * - Escape: Close dropdown
+   */
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -121,11 +178,16 @@ export function SearchableSelect({
     }
   };
 
+  /**
+   * Handle clicking on an option
+   */
   const handleOptionClick = (option: string) => {
     addItem(option);
   };
 
-  // Close dropdown when clicking outside
+  /**
+   * Close dropdown when clicking outside
+   */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -143,6 +205,7 @@ export function SearchableSelect({
       <Label>{label}</Label>
       <div className="relative">
         <div className="flex items-center">
+          {/* Search input */}
           <Input
             ref={inputRef}
             value={searchTerm}
@@ -152,6 +215,7 @@ export function SearchableSelect({
             placeholder={placeholder}
             className="pr-10"
           />
+          {/* Dropdown toggle button */}
           <Button
             type="button"
             variant="ghost"
@@ -166,7 +230,7 @@ export function SearchableSelect({
           </Button>
         </div>
 
-        {/* Dropdown */}
+        {/* Dropdown menu with filtered options */}
         {isOpen && (filteredOptions.length > 0 || searchTerm) && (
           <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
             {filteredOptions.length > 0 ? (
@@ -184,6 +248,7 @@ export function SearchableSelect({
                 ))}
               </ul>
             ) : searchTerm && (
+              /* Show message when no matches found but user can add custom value */
               <div className="px-3 py-2 text-sm text-muted-foreground">
                 Press Enter to add "{searchTerm}"
               </div>
@@ -192,14 +257,16 @@ export function SearchableSelect({
         )}
       </div>
 
-      {/* Selected items */}
+      {/* Selected items displayed as badges */}
       <div className="flex flex-wrap gap-1 mt-2">
         {selectedItems.map((item) => (
           <Badge key={item} variant={variant} className="cursor-pointer flex items-center gap-1">
+            {/* Language flag for language selections */}
             {field === "languages" && (
               <span className="text-sm">{getLanguageFlag(item)}</span>
             )}
             {item}
+            {/* Remove button */}
             <X
               className="w-3 h-3 ml-1"
               onClick={() => removeItem(item)}

@@ -1,26 +1,25 @@
 /**
- * PROFILE SUBMISSION MODAL COMPONENT
+ * PROFILE EDIT MODAL COMPONENT
  *
- * Allows users to submit new woman professional profiles for review and approval.
- * Provides a comprehensive form with all profile fields including:
- * - Basic info (name, email, job title, company)
- * - Profile picture upload
- * - Biography (short and detailed)
- * - Nationality and contact information
- * - Languages, areas of expertise, keywords
- * - Interest types (speaker, panelist, board member)
- * - Privacy consent checkbox
+ * Allows authenticated users to edit their own profile.
+ * Pre-populates form with existing profile data and allows updates.
  *
  * Features:
+ * - Fetches user's existing profile data
+ * - Pre-populates all form fields
+ * - Updates profile (not creates new one)
+ * - Profile picture upload/replacement
  * - Form validation with error messages
- * - File upload for profile pictures
- * - Searchable select components for dynamic fields
- * - Success modal after submission
- * - Form reset after successful submission
- * - Loading states during submission
+ * - Loading states during fetch and update
+ * - Success notification after update
+ *
+ * Security:
+ * - Only accessible to authenticated users
+ * - Only fetches/updates profiles where user_id matches authenticated user
+ * - Database RLS policies enforce security at database level
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,27 +29,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { NationalitySelect } from "@/components/NationalitySelect";
 import { PhoneNumberInput } from "@/components/PhoneNumberInput";
-import { SuccessModal } from "@/components/SuccessModal";
-import { useProfileSubmission } from "@/hooks/useProfileSubmission";
+import { useProfileEdit } from "@/hooks/useProfileEdit";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
-interface ProfileSubmissionModalProps {
+interface ProfileEditModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onProfileSubmitted: () => void;
+	onNoProfileFound: () => void;
 }
 
-export function ProfileSubmissionModal({
-	isOpen,
-	onClose,
-	onProfileSubmitted,
-}: ProfileSubmissionModalProps) {
-	// Success modal state - shown after successful submission
-	const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
-
-	// Profile picture file state
+export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileEditModalProps) {
+	const { user } = useAuth();
 	const [profilePicture, setProfilePicture] = useState<File | null>(null);
 
-	// Form management hook - handles form state, validation, and submission
+	// Profile editing hook - handles fetching and updating profile
 	const {
 		formData,
 		setFormData,
@@ -63,23 +56,42 @@ export function ProfileSubmissionModal({
 		keywords,
 		setKeywords,
 		loading,
+		loadingProfile,
 		errors,
-		handleSubmit,
+		fetchProfile,
+		handleUpdate,
 		resetForm,
-	} = useProfileSubmission();
+	} = useProfileEdit();
+
+	/**
+	 * Fetch profile data when modal opens
+	 * Only fetches if user is authenticated and modal is open
+	 * If no profile is found, closes edit modal and opens submission modal instead
+	 */
+	useEffect(() => {
+		if (isOpen && user) {
+			const loadProfile = async () => {
+				const profileFound = await fetchProfile();
+				// If no profile found, close edit modal and open submission modal
+				if (!profileFound && onNoProfileFound) {
+					onClose();
+					onNoProfileFound();
+				}
+			};
+			loadProfile();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isOpen, user]);
 
 	/**
 	 * Handle form submission
-	 * Submits profile data and profile picture, then shows success modal
+	 * Updates existing profile with new data
 	 */
 	const handleFormSubmit = async (e: React.FormEvent) => {
-		const success = await handleSubmit(e, profilePicture);
+		const success = await handleUpdate(e, profilePicture);
 		if (success) {
-			resetForm();
 			setProfilePicture(null);
 			onClose();
-			setShowSuccessModal(true);
-			onProfileSubmitted();
 		}
 	};
 
@@ -93,18 +105,25 @@ export function ProfileSubmissionModal({
 		onClose();
 	};
 
-	/**
-	 * Handle success modal close
-	 */
-	const handleSuccessModalClose = () => {
-		setShowSuccessModal(false);
-	};
+	// Show loading state while fetching profile
+	if (loadingProfile) {
+		return (
+			<Dialog open={isOpen} onOpenChange={handleClose}>
+				<DialogContent className="max-w-md">
+					<div className="flex flex-col items-center justify-center py-8">
+						<Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+						<p className="text-muted-foreground">Loading your profile...</p>
+					</div>
+				</DialogContent>
+			</Dialog>
+		);
+	}
 
 	return (
 		<Dialog open={isOpen} onOpenChange={handleClose}>
 			<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
-					<DialogTitle className="text-2xl">Submit Your Profile</DialogTitle>
+					<DialogTitle className="text-2xl">Edit Your Profile</DialogTitle>
 				</DialogHeader>
 
 				<form onSubmit={handleFormSubmit} className="space-y-6">
@@ -112,9 +131,9 @@ export function ProfileSubmissionModal({
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 						{/* Full Name - Required */}
 						<div>
-							<Label htmlFor="name">Full Name *</Label>
+							<Label htmlFor="edit-name">Full Name *</Label>
 							<Input
-								id="name"
+								id="edit-name"
 								value={formData.name}
 								onChange={(e) => setFormData({ ...formData, name: e.target.value })}
 								required
@@ -127,9 +146,9 @@ export function ProfileSubmissionModal({
 
 						{/* Email - Required */}
 						<div>
-							<Label htmlFor="email">Email *</Label>
+							<Label htmlFor="edit-email">Email *</Label>
 							<Input
-								id="email"
+								id="edit-email"
 								type="email"
 								value={formData.email}
 								onChange={(e) =>
@@ -145,9 +164,9 @@ export function ProfileSubmissionModal({
 
 						{/* Job Title - Required */}
 						<div>
-							<Label htmlFor="jobTitle">Job Title *</Label>
+							<Label htmlFor="edit-jobTitle">Job Title *</Label>
 							<Input
-								id="jobTitle"
+								id="edit-jobTitle"
 								value={formData.jobTitle}
 								onChange={(e) =>
 									setFormData({ ...formData, jobTitle: e.target.value })
@@ -158,12 +177,15 @@ export function ProfileSubmissionModal({
 
 						{/* Company Name - Optional */}
 						<div>
-							<Label htmlFor="companyName">Company Name</Label>
+							<Label htmlFor="edit-companyName">Company Name</Label>
 							<Input
-								id="companyName"
+								id="edit-companyName"
 								value={formData.companyName}
 								onChange={(e) =>
-									setFormData({ ...formData, companyName: e.target.value })
+									setFormData({
+										...formData,
+										companyName: e.target.value,
+									})
 								}
 							/>
 						</div>
@@ -171,10 +193,10 @@ export function ProfileSubmissionModal({
 
 					{/* Profile Picture Upload */}
 					<div>
-						<Label htmlFor="profilePicture">Profile Picture</Label>
+						<Label htmlFor="edit-profilePicture">Profile Picture</Label>
 						<div className="mt-1">
 							<Input
-								id="profilePicture"
+								id="edit-profilePicture"
 								type="file"
 								accept="image/*"
 								onChange={(e) => {
@@ -185,7 +207,12 @@ export function ProfileSubmissionModal({
 							/>
 							{profilePicture && (
 								<p className="text-sm text-muted-foreground mt-1">
-									Selected: {profilePicture.name}
+									New picture selected: {profilePicture.name}
+								</p>
+							)}
+							{formData.profilePictureUrl && !profilePicture && (
+								<p className="text-sm text-muted-foreground mt-1">
+									Current picture will be kept. Upload a new file to replace it.
 								</p>
 							)}
 						</div>
@@ -194,9 +221,9 @@ export function ProfileSubmissionModal({
 					{/* Biography Section */}
 					{/* Short Bio - Required */}
 					<div>
-						<Label htmlFor="shortBio">Short Bio *</Label>
+						<Label htmlFor="edit-shortBio">Short Bio *</Label>
 						<Textarea
-							id="shortBio"
+							id="edit-shortBio"
 							value={formData.shortBio}
 							onChange={(e) => setFormData({ ...formData, shortBio: e.target.value })}
 							placeholder="Brief description about yourself..."
@@ -206,11 +233,16 @@ export function ProfileSubmissionModal({
 
 					{/* Detailed Bio - Optional */}
 					<div>
-						<Label htmlFor="longBio">Detailed Bio</Label>
+						<Label htmlFor="edit-longBio">Detailed Bio</Label>
 						<Textarea
-							id="longBio"
+							id="edit-longBio"
 							value={formData.longBio}
-							onChange={(e) => setFormData({ ...formData, longBio: e.target.value })}
+							onChange={(e) =>
+								setFormData({
+									...formData,
+									longBio: e.target.value,
+								})
+							}
 							placeholder="Detailed description about your background and experience..."
 							rows={4}
 						/>
@@ -224,9 +256,10 @@ export function ProfileSubmissionModal({
 							onChange={(value) => setFormData({ ...formData, nationality: value })}
 							error={errors.nationality}
 						/>
+
 						{/* Contact Number - Optional, with country code selector */}
 						<PhoneNumberInput
-							id="submitContactNumber"
+							id="editContactNumber"
 							value={formData.contactNumber}
 							onChange={(value) => setFormData({ ...formData, contactNumber: value })}
 							error={errors.contact_number}
@@ -280,7 +313,7 @@ export function ProfileSubmissionModal({
 							{["speaker", "board member", "panelist"].map((role) => (
 								<div key={role} className="flex items-center space-x-2">
 									<Checkbox
-										id={role}
+										id={`edit-${role}`}
 										checked={formData.interestedIn.includes(role)}
 										onCheckedChange={(checked) => {
 											if (checked) {
@@ -299,7 +332,7 @@ export function ProfileSubmissionModal({
 										}}
 										className={errors.interested_in ? "border-destructive" : ""}
 									/>
-									<Label htmlFor={role} className="capitalize">
+									<Label htmlFor={`edit-${role}`} className="capitalize">
 										{role}
 									</Label>
 								</div>
@@ -310,38 +343,17 @@ export function ProfileSubmissionModal({
 						)}
 					</div>
 
-					{/* Privacy Consent - Required */}
-					<div className="flex items-center space-x-2">
-						<Checkbox
-							id="consent"
-							checked={formData.consent}
-							onCheckedChange={(checked) =>
-								setFormData({ ...formData, consent: checked as boolean })
-							}
-							className={errors.consent ? "border-destructive" : ""}
-						/>
-						<Label htmlFor="consent">
-							I agree to the privacy policy and terms and conditions *
-						</Label>
-						{errors.consent && (
-							<p className="text-sm text-destructive ml-6">{errors.consent}</p>
-						)}
-					</div>
-
 					{/* Form Actions */}
 					<div className="flex gap-4 pt-6">
 						<Button type="button" variant="outline" size="sm" onClick={handleClose}>
 							Cancel
 						</Button>
 						<Button type="submit" size="sm" disabled={loading}>
-							{loading ? "Submitting..." : "Submit Profile"}
+							{loading ? "Updating..." : "Update Profile"}
 						</Button>
 					</div>
 				</form>
 			</DialogContent>
-
-			{/* Success modal - shown after successful submission */}
-			<SuccessModal isOpen={showSuccessModal} onClose={handleSuccessModalClose} />
 		</Dialog>
 	);
 }

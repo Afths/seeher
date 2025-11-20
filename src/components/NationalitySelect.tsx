@@ -1,171 +1,199 @@
+/**
+ * COUNTRY SELECT COMPONENT
+ *
+ * A searchable select component for selecting nationality/country.
+ * Uses world-countries library for standardized country data.
+ *
+ * Features:
+ * - Pre-populated list of all countries (standardized names)
+ * - Search/filter functionality
+ * - Keyboard navigation
+ * - Prevents inconsistencies (e.g., "Cyprus" vs "Cypriot")
+ *
+ * Uses ISO 3166-1 alpha-2 country codes for consistency.
+ */
+
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import countries from "world-countries";
 
 interface NationalitySelectProps {
-  label: string;
-  placeholder: string;
-  value: string;
-  onChange: (value: string) => void;
+	value: string;
+	onChange: (value: string) => void;
+	error?: string;
 }
 
-export function NationalitySelect({ 
-  label, 
-  placeholder, 
-  value, 
-  onChange
-}: NationalitySelectProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [availableOptions, setAvailableOptions] = useState<string[]>([]);
-  const [filteredOptions, setFilteredOptions] = useState<string[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+export function NationalitySelect({ value, onChange, error }: NationalitySelectProps) {
+	// Default to Cyprus if no value provided
+	const [searchTerm, setSearchTerm] = useState<string>(value || "Cyprus");
+	const [isOpen, setIsOpen] = useState<boolean>(false); // Dropdown open/close state
+	const [highlightedIndex, setHighlightedIndex] = useState<number>(-1); // Keyboard navigation - highlighted option index
 
-  // Fetch existing nationalities from database
-  useEffect(() => {
-    const fetchOptions = async () => {
-      const { data } = await supabase
-        .from("women")
-        .select("nationality")
-        .eq("status", "APPROVED")
-        .not("nationality", "is", null);
+	const inputRef = useRef<HTMLInputElement>(null);
+	const dropdownRef = useRef<HTMLDivElement>(null);
+	const hasSetDefault = useRef<boolean>(false);
 
-      if (data) {
-        const allValues = new Set<string>();
-        data.forEach((item) => {
-          if (item.nationality) {
-            allValues.add(item.nationality);
-          }
-        });
-        setAvailableOptions(Array.from(allValues).sort());
-      }
-    };
+	// Prepare country list: common name and ISO code
+	const countryList: Array<{ name: string; code: string }> = countries
+		.map((country) => ({
+			name: country.name.common,
+			code: country.cca2,
+		}))
+		.sort((a, b) => a.name.localeCompare(b.name));
 
-    fetchOptions();
-  }, []);
+	// Filter countries based on search term
+	const filteredCountries: Array<{ name: string; code: string }> = countryList.filter((country) =>
+		country.name.toLowerCase().includes(searchTerm.toLowerCase())
+	);
 
-  // Update search term when value changes externally
-  useEffect(() => {
-    setSearchTerm(value);
-  }, [value]);
+	/**
+	 * Set default value to Cyprus on mount if no value provided
+	 */
+	useEffect(() => {
+		if (!value && !hasSetDefault.current) {
+			hasSetDefault.current = true;
+			setSearchTerm("Cyprus");
+			onChange("Cyprus");
+		}
+	}, []);
 
-  // Filter options based on search term
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = availableOptions.filter(option =>
-        option.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredOptions(filtered);
-      setHighlightedIndex(-1);
-    } else {
-      setFilteredOptions(availableOptions);
-      setHighlightedIndex(-1);
-    }
-  }, [searchTerm, availableOptions]);
+	/**
+	 * Update search term when value prop changes externally
+	 *
+	 * This handles cases where the value is set outside of this component:
+	 * - Pre-population when editing a profile (fetchProfile sets formData)
+	 * - Form reset (resetForm clears formData)
+	 */
+	useEffect(() => {
+		if (value) {
+			setSearchTerm(value);
+		}
+	}, [value]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setSearchTerm(newValue);
-    onChange(newValue);
-    setIsOpen(true);
-  };
+	// Close dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+				setIsOpen(false);
+				setHighlightedIndex(-1);
+			}
+		};
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (highlightedIndex >= 0 && filteredOptions[highlightedIndex]) {
-        const selectedOption = filteredOptions[highlightedIndex];
-        setSearchTerm(selectedOption);
-        onChange(selectedOption);
-        setIsOpen(false);
-      }
-      setHighlightedIndex(-1);
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlightedIndex(prev => 
-        prev < filteredOptions.length - 1 ? prev + 1 : 0
-      );
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlightedIndex(prev => 
-        prev > 0 ? prev - 1 : filteredOptions.length - 1
-      );
-    } else if (e.key === "Escape") {
-      setIsOpen(false);
-      setHighlightedIndex(-1);
-    }
-  };
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, []);
 
-  const handleOptionClick = (option: string) => {
-    setSearchTerm(option);
-    onChange(option);
-    setIsOpen(false);
-    setHighlightedIndex(-1);
-  };
+	/**
+	 * Handle input field changes
+	 * Updates search term as user types and opens dropdown
+	 */
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const newValue: string = e.target.value;
+		setSearchTerm(newValue);
+		setIsOpen(true);
+		setHighlightedIndex(-1);
+	};
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setHighlightedIndex(-1);
-      }
-    };
+	/**
+	 * Handle selecting a country from the dropdown:
+	 * - Updates the search term to show the country name
+	 * - Calls onChange callback with the country name
+	 * - Closes dropdown and resets keyboard navigation
+	 */
+	const handleSelect = (country: { name: string; code: string }) => {
+		setSearchTerm(country.name);
+		onChange(country.name);
+		setIsOpen(false);
+		setHighlightedIndex(-1);
+	};
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+	/**
+	 * Handle keyboard navigation and selection
+	 * - Enter: Select highlighted option (if any)
+	 * - ArrowDown: Move highlight down (wraps to top)
+	 * - ArrowUp: Move highlight up (wraps to bottom)
+	 * - Escape: Close dropdown and reset highlight
+	 */
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			if (highlightedIndex >= 0 && filteredCountries[highlightedIndex]) {
+				handleSelect(filteredCountries[highlightedIndex]);
+			}
+		} else if (e.key === "ArrowDown") {
+			e.preventDefault();
+			setHighlightedIndex((prev) => (prev < filteredCountries.length - 1 ? prev + 1 : 0));
+		} else if (e.key === "ArrowUp") {
+			e.preventDefault();
+			setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : filteredCountries.length - 1));
+		} else if (e.key === "Escape") {
+			setIsOpen(false);
+			setHighlightedIndex(-1);
+		}
+	};
 
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <Label>{label}</Label>
-      <div className="relative">
-        <Input
-          ref={inputRef}
-          value={searchTerm}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setIsOpen(true)}
-          placeholder={placeholder}
-          className="pr-10"
-        />
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-          onClick={() => {
-            setIsOpen(!isOpen);
-            inputRef.current?.focus();
-          }}
-        >
-          <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-        </Button>
+	/**
+	 * Handle input focus
+	 * Opens dropdown when user clicks on the input field
+	 */
+	const handleFocus = () => {
+		setIsOpen(true);
+	};
 
-        {/* Dropdown */}
-        {isOpen && filteredOptions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
-            <ul className="py-1">
-              {filteredOptions.map((option, index) => (
-                <li
-                  key={option}
-                  className={`px-3 py-2 cursor-pointer text-sm hover:bg-accent ${
-                    index === highlightedIndex ? 'bg-accent' : ''
-                  }`}
-                  onClick={() => handleOptionClick(option)}
-                >
-                  {option}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+	return (
+		<div className="relative" ref={dropdownRef}>
+			<Label htmlFor="country-select">Nationality *</Label>
+			<div className="relative">
+				<Input
+					ref={inputRef}
+					id="country-select"
+					value={searchTerm}
+					onChange={handleInputChange}
+					onKeyDown={handleKeyDown}
+					onFocus={handleFocus}
+					placeholder="Search or select country..."
+					required
+					className={`pr-10 ${error ? "border-destructive" : ""}`}
+				/>
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+					onClick={() => {
+						setIsOpen(!isOpen);
+						inputRef.current?.focus();
+					}}
+				>
+					<ChevronDown
+						className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+					/>
+				</Button>
+
+				{/* Dropdown menu */}
+				{isOpen && filteredCountries.length > 0 && (
+					<div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
+						<ul className="py-1">
+							{filteredCountries.map((country, index) => (
+								<li
+									key={country.code}
+									className={`px-3 py-2 cursor-pointer text-sm hover:bg-accent ${
+										index === highlightedIndex ? "bg-accent" : ""
+									}`}
+									onClick={() => handleSelect(country)}
+									onMouseEnter={() => setHighlightedIndex(index)}
+								>
+									{country.name}
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+			</div>
+			{error && <p className="text-sm text-destructive mt-1">{error}</p>}
+		</div>
+	);
 }
