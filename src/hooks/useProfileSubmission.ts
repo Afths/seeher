@@ -244,6 +244,41 @@ export function useProfileSubmission() {
 
 			if (error) throw error;
 
+			/**
+			 * STEP 6: Send submission confirmation email
+			 *
+			 * Notifies the user that their profile submission was received and is pending review.
+			 */
+			try {
+				const { error: emailError } = await supabase.functions.invoke(
+					"send-submission-email",
+					{
+						body: {
+							email: validatedData.email,
+							name: validatedData.name,
+						},
+					}
+				);
+
+				if (emailError) {
+					console.error(
+						"[useProfileSubmission] ❌ Error sending submission confirmation email:",
+						emailError
+					);
+					// Don't throw - submission was successful, email is just a notification
+				} else {
+					console.log(
+						"[useProfileSubmission] ✅ Submission confirmation email sent successfully"
+					);
+				}
+			} catch (emailError) {
+				console.error(
+					"[useProfileSubmission] ❌ Error sending submission confirmation email:",
+					emailError
+				);
+				// Don't throw - submission was successful, email is just a notification
+			}
+
 			// Success - profile submitted and awaiting admin approval
 			return true;
 		} catch (error) {

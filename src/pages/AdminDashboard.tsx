@@ -98,9 +98,9 @@ export default function AdminDashboard() {
 				throw updateError;
 			}
 
-			// Send welcome email with magic link via Supabase Edge Function
-			// This allows the profile owner to sign in and manage their profile
-			const { error: emailError } = await supabase.functions.invoke("send-magic-link", {
+			// Send approval email via Loop.so Edge Function
+			// This notifies the user that their profile has been approved and includes a magic link to sign in
+			const { error: emailError } = await supabase.functions.invoke("send-approval-email", {
 				body: {
 					email: submission.email,
 					name: submission.name,
@@ -108,9 +108,10 @@ export default function AdminDashboard() {
 			});
 
 			if (emailError) {
-				console.error("[AdminDashboard] ❌ Error sending welcome email:", emailError);
+				console.error("[AdminDashboard] ❌ Error sending approval email:", emailError);
+				// Don't throw - profile is already approved, email failure shouldn't block the action
 			} else {
-				console.log("[AdminDashboard] ✅ Welcome email sent successfully");
+				console.log("[AdminDashboard] ✅ Approval email sent successfully");
 			}
 
 			// Refresh the submissions list to remove the approved profile
@@ -126,7 +127,8 @@ export default function AdminDashboard() {
 	 * This function:
 	 * 1. Logs the admin action for security auditing
 	 * 2. Updates the profile status to "NOT_APPROVED"
-	 * 3. Refreshes the submissions list
+	 * 3. Sends a rejection email notification to the user
+	 * 4. Refreshes the submissions list
 	 *
 	 * Note: Rejected profiles are kept in the database (not deleted) for:
 	 * - Audit trail and compliance purposes
@@ -152,6 +154,24 @@ export default function AdminDashboard() {
 			if (error) {
 				console.error("[AdminDashboard] ❌ Error rejecting submission:", error);
 				throw error;
+			}
+
+			// Send rejection email via Loop.so Edge Function
+			// This notifies the user that their profile submission was not approved
+			const { error: emailError } = await supabase.functions.invoke("send-rejection-email", {
+				body: {
+					email: submission.email,
+					name: submission.name,
+					// Optional: Add rejection reason if you want to provide feedback
+					// reason: "Your profile did not meet our current requirements..."
+				},
+			});
+
+			if (emailError) {
+				console.error("[AdminDashboard] ❌ Error sending rejection email:", emailError);
+				// Don't throw - profile is already rejected, email failure shouldn't block the action
+			} else {
+				console.log("[AdminDashboard] ✅ Rejection email sent successfully");
 			}
 
 			console.log("[AdminDashboard] ✅ Profile has been rejected");
