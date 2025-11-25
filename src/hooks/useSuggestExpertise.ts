@@ -39,35 +39,35 @@ export function useSuggestExpertise() {
 	 * @returns Promise with data containing updatedCount (number of profiles updated)
 	 * @throws Error if the Edge Function call fails
 	 */
-	const suggestExpertise = async () => {
-		setIsLoading(true);
-
-		try {
+  const suggestExpertise = async () => {
+    setIsLoading(true);
+    
+    try {
 			// Invoke Supabase Edge Function for AI expertise suggestions
 			// The Edge Function runs server-side and processes profiles securely
 			const { data, error } = await supabase.functions.invoke("suggest-expertise");
-
-			if (error) {
-				throw error;
-			}
+      
+      if (error) {
+        throw error;
+      }
 
 			// Show success message with count of updated profiles
 			toast.success(
 				`${data.updatedCount} profiles updated with AI-suggested areas of expertise`
 			);
 
-			return data;
-		} catch (error) {
+      return data;
+    } catch (error) {
 			console.error("[useSuggestExpertise] ❌ Error suggesting expertise:", error);
 			toast.error("Failed to generate expertise suggestions. Please try again.");
-			throw error;
-		} finally {
-			setIsLoading(false);
-		}
-	};
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-	return {
-		suggestExpertise,
-		isLoading,
-	};
+  return {
+    suggestExpertise,
+    isLoading,
+  };
 }

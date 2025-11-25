@@ -26,7 +26,7 @@
  * - Returns form data, setters, loading state, and errors
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { profileSubmissionSchema, sanitizeInput, checkRateLimit } from "@/lib/validation";
@@ -77,6 +77,20 @@ export function useProfileSubmission() {
 	const [keywords, setKeywords] = useState<string[]>([]);
 
 	/**
+	 * Prefill email with authenticated user's email
+	 * Since users must sign in to submit a profile, and they can only create a profile for themselves, the email field should be automatically filled and locked to their authenticated email.
+	 */
+	useEffect(() => {
+		if (user) {
+			// Sync email with authenticated user's email when user is logged in
+			setFormData((prev) => ({ ...prev, email: user.email }));
+		} else {
+			// Clear email when user signs out (important for when a different user signs in)
+			setFormData((prev) => ({ ...prev, email: "" }));
+		}
+	}, [user?.email]); // Only depend on user's email, not the entire user object since it's locked and required
+
+	/**
 	 * Handle profile submission
 	 *
 	 * Processes the form submission by:
@@ -93,43 +107,6 @@ export function useProfileSubmission() {
 	const handleSubmit = async (e: React.FormEvent, profilePicture?: File | null) => {
 		e.preventDefault();
 		setErrors({});
-
-		/**
-		 * STEP 0: Check if user already has a profile (approved or pending)
-		 * This is a safeguard check - UI should prevent this, but double-check here
-		 * Users can only have ONE profile - either approved or pending
-		 */
-		if (!user) {
-			toast.error("Please sign in to submit a profile.");
-			return;
-		}
-
-		const { data: existingProfile, error: checkError } = await supabase
-			.from("women")
-			.select("id, status")
-			.eq("user_id", user.id)
-			.maybeSingle();
-
-		if (checkError) {
-			console.error("[useProfileSubmission] ❌ Error checking existing profile:", checkError);
-			toast.error("Error checking profile status. Please try again.");
-			return;
-		}
-
-		if (existingProfile) {
-			if (existingProfile.status === "PENDING_APPROVAL") {
-				toast.error(
-					"You already have a profile submission pending review. Please wait for admin approval before submitting another profile."
-				);
-				return;
-			} else if (existingProfile.status === "APPROVED") {
-				toast.error(
-					"You already have an approved profile. Please use 'Edit My Profile' to update your existing profile."
-				);
-				return;
-			}
-			// If status is NOT_APPROVED, allow resubmission (don't block)
-		}
 
 		// Rate limiting check
 		const clientId = `${window.location.hostname}-${Date.now()}`;
@@ -250,12 +227,16 @@ export function useProfileSubmission() {
 			 * Notifies the user that their profile submission was received and is pending review.
 			 */
 			try {
+				// Extract first name from full name (use first word, or full name if no space)
+				const firstName = validatedData.name.split(" ")[0] || validatedData.name;
+
 				const { error: emailError } = await supabase.functions.invoke(
 					"send-submission-email",
 					{
+						method: "POST",
 						body: {
 							email: validatedData.email,
-							name: validatedData.name,
+							name: firstName,
 						},
 					}
 				);
@@ -310,12 +291,13 @@ export function useProfileSubmission() {
 	 * Reset form to initial empty state
 	 *
 	 * Clears all form fields, arrays, and errors.
+	 * Note: Preserves the authenticated user's email (since it's locked and required).
 	 * Called after successful submission or when modal closes.
 	 */
 	const resetForm = () => {
 		setFormData({
 			name: "",
-			email: "",
+			email: user.email,
 			jobTitle: "",
 			companyName: "",
 			shortBio: "",

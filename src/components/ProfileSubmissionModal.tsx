@@ -21,6 +21,7 @@
  */
 
 import { useState } from "react";
+import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -125,19 +126,28 @@ export function ProfileSubmissionModal({
 							)}
 						</div>
 
-						{/* Email - Required */}
+						{/* Email - Required - locked to authenticated user's email */}
 						<div>
 							<Label htmlFor="email">Email *</Label>
-							<Input
-								id="email"
-								type="email"
-								value={formData.email}
-								onChange={(e) =>
-									setFormData({ ...formData, email: e.target.value })
-								}
-								required
-								className={errors.email ? "border-destructive" : ""}
-							/>
+							<div className="relative">
+								<Input
+									id="email"
+									type="email"
+									value={formData.email}
+									onChange={(e) =>
+										setFormData({ ...formData, email: e.target.value })
+									}
+									required
+									disabled
+									className={`${
+										errors.email ? "border-destructive" : ""
+									} bg-muted cursor-not-allowed pr-10`}
+								/>
+								<Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+							</div>
+							<p className="text-xs text-muted-foreground mt-1">
+								This email is locked to your account and cannot be changed
+							</p>
 							{errors.email && (
 								<p className="text-sm text-destructive mt-1">{errors.email}</p>
 							)}
@@ -277,7 +287,7 @@ export function ProfileSubmissionModal({
 					<div className="space-y-4">
 						<Label>Interested In *</Label>
 						<div className="space-y-3">
-							{["speaker", "board member", "panelist"].map((role) => (
+							{["Speaker", "Board Member", "Panelist"].map((role) => (
 								<div key={role} className="flex items-center space-x-2">
 									<Checkbox
 										id={role}
@@ -299,9 +309,7 @@ export function ProfileSubmissionModal({
 										}}
 										className={errors.interested_in ? "border-destructive" : ""}
 									/>
-									<Label htmlFor={role} className="capitalize">
-										{role}
-									</Label>
+									<Label htmlFor={role}>{role}</Label>
 								</div>
 							))}
 						</div>

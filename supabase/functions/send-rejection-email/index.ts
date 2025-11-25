@@ -1,3 +1,5 @@
+// A POST endpoint that sends a rejection email to the user when their profile is rejected.
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
@@ -8,7 +10,7 @@ const corsHeaders = {
 interface RejectionEmailRequest {
 	email: string;
 	name: string;
-	reason?: string; // Optional rejection reason
+	rejection_explanation?: string; // Optional rejection reason
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -18,9 +20,13 @@ const handler = async (req: Request): Promise<Response> => {
 	}
 
 	try {
-		const { email, name, reason }: RejectionEmailRequest = await req.json();
+		const { email, name, rejection_explanation }: RejectionEmailRequest = await req.json();
 
 		if (!email || !name) {
+			console.error(
+				"[send-rejection-email] ❌ Email and name are required as part of the payload"
+			);
+
 			return new Response(JSON.stringify({ error: "Email and name are required" }), {
 				status: 400,
 				headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -32,14 +38,55 @@ const handler = async (req: Request): Promise<Response> => {
 			console.error(
 				"[send-rejection-email] ❌ LOOPS_API_KEY environment variable is not set"
 			);
-			return new Response(JSON.stringify({ error: "Email service not configured" }), {
-				status: 500,
-				headers: { "Content-Type": "application/json", ...corsHeaders },
-			});
+
+			return new Response(
+				JSON.stringify({
+					error: "Email service not configured",
+					details: "LOOPS_API_KEY environment variable is missing",
+				}),
+				{
+					status: 500,
+					headers: { "Content-Type": "application/json", ...corsHeaders },
+				}
+			);
 		}
 
-		const defaultReason =
-			"Your profile submission did not meet our current requirements. We encourage you to review our guidelines and resubmit.";
+		const loopsEmailId = Deno.env.get("LOOPS_REJECTION_EMAIL_ID");
+		if (!loopsEmailId) {
+			console.error(
+				"[send-rejection-email] ❌ LOOPS_REJECTION_EMAIL_ID environment variable is not set"
+			);
+
+			return new Response(
+				JSON.stringify({
+					error: "Email service not configured",
+					details: "LOOPS_REJECTION_EMAIL_ID environment variable is missing",
+				}),
+				{
+					status: 500,
+					headers: { "Content-Type": "application/json", ...corsHeaders },
+				}
+			);
+		}
+
+		// Get app URL for profile resubmit link
+		const appUrl = Deno.env.get("APP_URL");
+		if (!appUrl) {
+			console.error("[send-rejection-email] ❌ APP_URL environment variable is not set");
+			return new Response(
+				JSON.stringify({
+					error: "App URL not configured",
+					details: "APP_URL environment variable is missing",
+				}),
+				{
+					status: 500,
+					headers: { "Content-Type": "application/json", ...corsHeaders },
+				}
+			);
+		}
+
+		// Construct resubmit URL with query parameter to open profile submission modal
+		const resubmitUrl = `${appUrl}/?resubmit=true`;
 
 		// Send rejection email via Loop.so API
 		const loopsResponse = await fetch("https://app.loops.so/api/v1/transactional", {
@@ -53,18 +100,31 @@ const handler = async (req: Request): Promise<Response> => {
 				email: email,
 				dataVariables: {
 					name: name,
-					reason: reason || defaultReason,
+					rejection_explanation: rejection_explanation,
+					resubmit_url: resubmitUrl,
 				},
 			}),
 		});
 
 		if (!loopsResponse.ok) {
 			const errorText = await loopsResponse.text();
+
 			console.error("[send-rejection-email] ❌ Loop.so API error:", errorText);
-			throw new Error(`Failed to send email: ${loopsResponse.status} ${errorText}`);
+
+			return new Response(
+				JSON.stringify({
+					error: "Failed to send email",
+					loopsError: errorText,
+				}),
+				{
+					status: 500,
+					headers: { "Content-Type": "application/json", ...corsHeaders },
+				}
+			);
 		}
 
 		const result = await loopsResponse.json();
+
 		console.log("[send-rejection-email] ✅ Rejection email sent successfully:", result);
 
 		return new Response(JSON.stringify({ success: true, result }), {
@@ -76,6 +136,7 @@ const handler = async (req: Request): Promise<Response> => {
 		});
 	} catch (error: any) {
 		console.error("[send-rejection-email] ❌ Error:", error);
+
 		return new Response(JSON.stringify({ error: error.message }), {
 			status: 500,
 			headers: { "Content-Type": "application/json", ...corsHeaders },

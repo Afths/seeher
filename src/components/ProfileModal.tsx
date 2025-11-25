@@ -114,7 +114,7 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 										<h4 className="text-sm font-medium text-muted-foreground">
 											INTERESTED IN
 										</h4>
-										<p className="text-sm capitalize">{woman.interested_in}</p>
+										<p className="text-sm">{woman.interested_in.join(", ")}</p>
 									</div>
 								)}
 							</CardContent>

@@ -21,6 +21,16 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+	DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
@@ -34,10 +44,13 @@ export default function AdminDashboard() {
 
 	const [submissions, setSubmissions] = useState<SubmissionType[]>([]); // List of submissions to review
 	const [loading, setLoading] = useState<boolean>(true); // Loading state
+	const [rejectDialogOpen, setRejectDialogOpen] = useState<boolean>(false); // Rejection dialog state
+	const [selectedSubmission, setSelectedSubmission] = useState<SubmissionType | null>(null); // Submission being rejected
+	const [rejectionReason, setRejectionReason] = useState<string>(""); // Rejection reason input
 
 	/**
 	 * Fetch profile submissions from database
-	 * Retrieves profiles with status PENDING_APPROVAL or NOT_APPROVED
+	 * Retrieves pending submissions
 	 * Ordered by creation date (newest first)
 	 */
 	const fetchSubmissions = async () => {
@@ -45,7 +58,7 @@ export default function AdminDashboard() {
 			const { data, error } = await supabase
 				.from("women")
 				.select("*")
-				.in("status", ["PENDING_APPROVAL", "NOT_APPROVED"]) // Only show pending and rejected profiles
+				.eq("status", "PENDING_APPROVAL") // Only show pending submissions
 				.order("created_at", { ascending: false }); // Newest first
 
 			if (error) {
@@ -98,12 +111,15 @@ export default function AdminDashboard() {
 				throw updateError;
 			}
 
+			// Extract first name from full name (use first word, or full name if no space)
+			const firstName = submission.name.split(" ")[0] || submission.name;
+
 			// Send approval email via Loop.so Edge Function
 			// This notifies the user that their profile has been approved and includes a magic link to sign in
 			const { error: emailError } = await supabase.functions.invoke("send-approval-email", {
 				body: {
 					email: submission.email,
-					name: submission.name,
+					name: firstName,
 				},
 			});
 
@@ -112,7 +128,11 @@ export default function AdminDashboard() {
 				// Don't throw - profile is already approved, email failure shouldn't block the action
 			} else {
 				console.log("[AdminDashboard] ✅ Approval email sent successfully");
+				toast.success("Profile approval email sent successfully");
 			}
+
+			console.log("[AdminDashboard] ✅ Profile has been approved");
+			toast.success("Profile has been approved");
 
 			// Refresh the submissions list to remove the approved profile
 			fetchSubmissions();
@@ -122,12 +142,21 @@ export default function AdminDashboard() {
 	};
 
 	/**
+	 * Open rejection dialog with optional reason input
+	 */
+	const handleRejectClick = (submission: SubmissionType) => {
+		setSelectedSubmission(submission);
+		setRejectionReason("");
+		setRejectDialogOpen(true);
+	};
+
+	/**
 	 * Handle rejecting a profile submission
 	 *
 	 * This function:
 	 * 1. Logs the admin action for security auditing
 	 * 2. Updates the profile status to "NOT_APPROVED"
-	 * 3. Sends a rejection email notification to the user
+	 * 3. Sends a rejection email notification to the user (with optional reason for rejection)
 	 * 4. Refreshes the submissions list
 	 *
 	 * Note: Rejected profiles are kept in the database (not deleted) for:
@@ -136,12 +165,19 @@ export default function AdminDashboard() {
 	 * - Analytics on rejection patterns
 	 * Users with rejected profiles can resubmit (the app treats NOT_APPROVED as "no profile")
 	 */
-	const handleReject = async (submission: SubmissionType) => {
+	const handleReject = async () => {
+		if (!selectedSubmission) return;
+
+		const defaultReason =
+			"Your profile submission did not meet our current requirements. We encourage you to review our guidelines and resubmit.";
+		const reason = rejectionReason.trim() || defaultReason;
+
 		try {
 			// Log admin action for security auditing
 			logAdminAction("REJECT_SUBMISSION", {
-				submissionId: submission.id,
-				submissionName: submission.name,
+				submissionId: selectedSubmission.id,
+				submissionName: selectedSubmission.name,
+				rejectionReason: reason,
 			});
 
 			// Update profile status to NOT_APPROVED in database
@@ -149,21 +185,23 @@ export default function AdminDashboard() {
 			const { error } = await supabase
 				.from("women")
 				.update({ status: "NOT_APPROVED" })
-				.eq("id", submission.id);
+				.eq("id", selectedSubmission.id);
 
 			if (error) {
 				console.error("[AdminDashboard] ❌ Error rejecting submission:", error);
 				throw error;
 			}
 
+			// Extract first name from full name (use first word, or full name if no space)
+			const firstName = selectedSubmission.name.split(" ")[0] || selectedSubmission.name;
+
 			// Send rejection email via Loop.so Edge Function
 			// This notifies the user that their profile submission was not approved
 			const { error: emailError } = await supabase.functions.invoke("send-rejection-email", {
 				body: {
-					email: submission.email,
-					name: submission.name,
-					// Optional: Add rejection reason if you want to provide feedback
-					// reason: "Your profile did not meet our current requirements..."
+					email: selectedSubmission.email,
+					name: firstName,
+					rejection_explanation: reason,
 				},
 			});
 
@@ -172,14 +210,20 @@ export default function AdminDashboard() {
 				// Don't throw - profile is already rejected, email failure shouldn't block the action
 			} else {
 				console.log("[AdminDashboard] ✅ Rejection email sent successfully");
+				toast.success("Profile rejection email sent successfully");
 			}
 
 			console.log("[AdminDashboard] ✅ Profile has been rejected");
+			toast.success("Profile has been rejected");
 
-			// Refresh the submissions list
+			// Close dialog and refresh the submissions list
+			setRejectDialogOpen(false);
+			setSelectedSubmission(null);
+			setRejectionReason("");
 			fetchSubmissions();
 		} catch (error) {
 			console.error("[AdminDashboard] ❌ Error rejecting submission:", error);
+			toast.error("Failed to reject submission. Please try again.");
 		}
 	};
 
@@ -221,11 +265,10 @@ export default function AdminDashboard() {
 				<div className="mb-6 flex items-center justify-between">
 					<div>
 						<h2 className="text-2xl font-semibold mb-2">Profile Submissions</h2>
-						{/* Display counts of pending and rejected submissions */}
+						{/* Display count of pending submissions */}
 						<p className="text-muted-foreground">
-							{submissions.filter((s) => s.status === "PENDING_APPROVAL").length}{" "}
-							pending approval,{" "}
-							{submissions.filter((s) => s.status === "NOT_APPROVED").length} rejected
+							{submissions.length} pending submission
+							{submissions.length !== 1 ? "s" : ""}
 						</p>
 					</div>
 
@@ -358,16 +401,16 @@ export default function AdminDashboard() {
 												size="sm"
 												className="bg-green-600 hover:bg-green-700"
 											>
-												<Check className="w-4 h-4 mr-2" />
+												<Check className="w-4 h-4" />
 												Approve
 											</Button>
-											{/* Reject button - marks profile as rejected */}
+											{/* Reject button - opens dialog to optionally add rejection reason */}
 											<Button
-												onClick={() => handleReject(submission)}
+												onClick={() => handleRejectClick(submission)}
 												variant="destructive"
 												size="sm"
 											>
-												<X className="w-4 h-4 mr-2" />
+												<X className="w-4 h-4" />
 												Reject
 											</Button>
 										</div>
@@ -378,6 +421,39 @@ export default function AdminDashboard() {
 					</div>
 				)}
 			</div>
+
+			{/* Rejection Reason Dialog */}
+			<Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Reject Profile Submission</DialogTitle>
+						<DialogDescription>
+							Are you sure you want to reject this submission?
+						</DialogDescription>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						<div>
+							<Label htmlFor="rejection-reason">Rejection Reason</Label>
+							<Textarea
+								id="rejection-reason"
+								placeholder="Provide a reason for the rejection (or leave empty to use default reason)"
+								value={rejectionReason}
+								onChange={(e) => setRejectionReason(e.target.value)}
+								rows={4}
+								className="mt-2"
+							/>
+						</div>
+					</div>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
+							Cancel
+						</Button>
+						<Button variant="destructive" onClick={handleReject}>
+							Reject Submission
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

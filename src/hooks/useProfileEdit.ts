@@ -186,11 +186,11 @@ export function useProfileEdit() {
 			 * Sanitizes all text inputs to prevent XSS attacks.
 			 * Maps form data to database schema format.
 			 * Note: profile_picture_url is not in validation schema, handled separately.
+			 * Note: Email is not included - it's locked to authenticated user's email and set directly in the update.
 			 * Note: We don't update status, created_at, or user_id (protected fields).
 			 */
 			const updateData = {
 				name: sanitizeInput(formData.name),
-				email: sanitizeInput(formData.email),
 				job_title: sanitizeInput(formData.jobTitle),
 				company_name: sanitizeInput(formData.companyName),
 				nationality: sanitizeInput(formData.nationality),
@@ -230,7 +230,7 @@ export function useProfileEdit() {
 				.from("women")
 				.update({
 					name: validatedData.name,
-					email: validatedData.email,
+					email: user!.email!, // Always use authenticated user's email (guaranteed to exist for email/password auth) to ensure it matches their account.
 					job_title: validatedData.job_title,
 					company_name: validatedData.company_name ?? null,
 					short_bio: validatedData.short_bio,

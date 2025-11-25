@@ -58,7 +58,7 @@ export const profileSubmissionSchema = z.object({
 	memberships: z.array(z.string().max(100)).max(10, "Maximum 10 memberships allowed"),
 
 	interested_in: z
-		.array(z.enum(["speaker", "panelist", "board member"]))
+		.array(z.enum(["Speaker", "Panelist", "Board Member"]))
 		.min(1, "At least one role must be selected"),
 
 	social_media_links: z.record(z.string().url("Invalid URL format")).optional(),
@@ -68,9 +68,10 @@ export const profileSubmissionSchema = z.object({
 
 export type ProfileSubmissionData = z.infer<typeof profileSubmissionSchema>;
 
-// Profile update validation schema (same as submission, but without consent)
+// Profile update validation schema (same as submission, but without consent and email)
 // Consent is only set once during initial submission and cannot be changed
-export const profileUpdateSchema = profileSubmissionSchema.omit({ consent: true });
+// Email is locked to authenticated user's email and cannot be changed
+export const profileUpdateSchema = profileSubmissionSchema.omit({ consent: true, email: true });
 
 export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 

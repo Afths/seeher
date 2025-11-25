@@ -30,8 +30,7 @@ import { SearchableSelect } from "@/components/SearchableSelect";
 import { NationalitySelect } from "@/components/NationalitySelect";
 import { PhoneNumberInput } from "@/components/PhoneNumberInput";
 import { useProfileEdit } from "@/hooks/useProfileEdit";
-import { useAuth } from "@/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 
 interface ProfileEditModalProps {
 	isOpen: boolean;
@@ -40,7 +39,6 @@ interface ProfileEditModalProps {
 }
 
 export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileEditModalProps) {
-	const { user } = useAuth();
 	const [profilePicture, setProfilePicture] = useState<File | null>(null);
 
 	// Profile editing hook - handles fetching and updating profile
@@ -65,11 +63,10 @@ export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileE
 
 	/**
 	 * Fetch profile data when modal opens
-	 * Only fetches if user is authenticated and modal is open
 	 * If no profile is found, closes edit modal and opens submission modal instead
 	 */
 	useEffect(() => {
-		if (isOpen && user) {
+		if (isOpen) {
 			const loadProfile = async () => {
 				const profileFound = await fetchProfile();
 				// If no profile found, close edit modal and open submission modal
@@ -81,7 +78,7 @@ export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileE
 			loadProfile();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [isOpen, user]);
+	}, [isOpen]);
 
 	/**
 	 * Handle form submission
@@ -144,19 +141,29 @@ export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileE
 							)}
 						</div>
 
-						{/* Email - Required */}
+						{/* Email - Required - locked to authenticated user's email */}
 						<div>
 							<Label htmlFor="edit-email">Email *</Label>
-							<Input
-								id="edit-email"
-								type="email"
-								value={formData.email}
-								onChange={(e) =>
-									setFormData({ ...formData, email: e.target.value })
-								}
-								required
-								className={errors.email ? "border-destructive" : ""}
-							/>
+							<div className="relative">
+								<Input
+									id="edit-email"
+									type="email"
+									value={formData.email}
+									onChange={(e) =>
+										setFormData({ ...formData, email: e.target.value })
+									}
+									required
+									disabled
+									className={`${
+										errors.email ? "border-destructive" : ""
+									} bg-muted cursor-not-allowed pr-10`}
+								/>
+
+								<Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+							</div>
+							<p className="text-xs text-muted-foreground mt-1">
+								This email is locked to your account and cannot be changed
+							</p>
 							{errors.email && (
 								<p className="text-sm text-destructive mt-1">{errors.email}</p>
 							)}
@@ -310,7 +317,7 @@ export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileE
 					<div className="space-y-4">
 						<Label>Interested In *</Label>
 						<div className="space-y-3">
-							{["speaker", "board member", "panelist"].map((role) => (
+							{["Speaker", "Board Member", "Panelist"].map((role) => (
 								<div key={role} className="flex items-center space-x-2">
 									<Checkbox
 										id={`edit-${role}`}
@@ -332,9 +339,7 @@ export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileE
 										}}
 										className={errors.interested_in ? "border-destructive" : ""}
 									/>
-									<Label htmlFor={`edit-${role}`} className="capitalize">
-										{role}
-									</Label>
+									<Label htmlFor={`edit-${role}`}>{role}</Label>
 								</div>
 							))}
 						</div>

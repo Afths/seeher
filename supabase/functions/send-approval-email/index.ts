@@ -1,3 +1,5 @@
+// A POST endpoint that sends an approval email to the user when their profile is approved.
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
@@ -20,6 +22,10 @@ const handler = async (req: Request): Promise<Response> => {
 		const { email, name }: ApprovalEmailRequest = await req.json();
 
 		if (!email || !name) {
+			console.error(
+				"[send-approval-email] ❌ Email and name are required as part of the payload"
+			);
+
 			return new Response(JSON.stringify({ error: "Email and name are required" }), {
 				status: 400,
 				headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -29,12 +35,35 @@ const handler = async (req: Request): Promise<Response> => {
 		const loopsApiKey = Deno.env.get("LOOPS_API_KEY");
 		if (!loopsApiKey) {
 			console.error("[send-approval-email] ❌ LOOPS_API_KEY environment variable is not set");
-			return new Response(JSON.stringify({ error: "Email service not configured" }), {
-				status: 500,
-				headers: { "Content-Type": "application/json", ...corsHeaders },
-			});
+
+			return new Response(
+				JSON.stringify({
+					error: "Email service not configured",
+					details: "LOOPS_API_KEY environment variable is missing",
+				}),
+				{
+					status: 500,
+					headers: { "Content-Type": "application/json", ...corsHeaders },
+				}
+			);
 		}
 
+		const loopsEmailId = Deno.env.get("LOOPS_APPROVAL_EMAIL_ID");
+		if (!loopsEmailId) {
+			console.error(
+				"[send-approval-email] ❌ LOOPS_APPROVAL_EMAIL_ID environment variable is not set"
+			);
+			return new Response(
+				JSON.stringify({
+					error: "Email service not configured",
+					details: "LOOPS_APPROVAL_EMAIL_ID environment variable is missing",
+				}),
+				{
+					status: 500,
+					headers: { "Content-Type": "application/json", ...corsHeaders },
+				}
+			);
+		}
 		// Generate a magic link URL for the user to sign in
 		const supabaseUrl = Deno.env.get("SUPABASE_URL");
 		const magicLinkUrl = `${supabaseUrl}/auth/v1/magiclink?email=${encodeURIComponent(email)}`;
@@ -48,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({
-				transactionalId: Deno.env.get("LOOPS_APPROVAL_EMAIL_ID"),
+				transactionalId: loopsEmailId,
 				email: email,
 				dataVariables: {
 					name: name,
@@ -59,8 +88,19 @@ const handler = async (req: Request): Promise<Response> => {
 
 		if (!loopsResponse.ok) {
 			const errorText = await loopsResponse.text();
+
 			console.error("[send-approval-email] ❌ Loop.so API error:", errorText);
-			throw new Error(`Failed to send email: ${loopsResponse.status} ${errorText}`);
+
+			return new Response(
+				JSON.stringify({
+					error: "Failed to send email",
+					loopsError: errorText,
+				}),
+				{
+					status: 500,
+					headers: { "Content-Type": "application/json", ...corsHeaders },
+				}
+			);
 		}
 
 		const result = await loopsResponse.json();
@@ -75,6 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
 		});
 	} catch (error: any) {
 		console.error("[send-approval-email] ❌ Error:", error);
+
 		return new Response(JSON.stringify({ error: error.message }), {
 			status: 500,
 			headers: { "Content-Type": "application/json", ...corsHeaders },

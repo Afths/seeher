@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, User, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,9 @@ import { Woman, WomanPublic, ProfileStatus } from "@/types";
 const Index = () => {
 	// React Router navigation hook for client-side navigation
 	const navigate = useNavigate();
+
+	// Get URL search parameters for deep linking (e.g., ?resubmit=true)
+	const [searchParams, setSearchParams] = useSearchParams();
 
 	// Authentication hook - provides current user and sign out function
 	// Note: user can be NULL if not logged in
@@ -89,11 +92,27 @@ const Index = () => {
 			}
 
 			setHasProfile(!!data);
-			setProfileStatus(data.status as ProfileStatus);
+			setProfileStatus(data ? (data.status as ProfileStatus) : null);
 		};
 
 		checkUserProfile();
 	}, [user]);
+
+	/**
+	 * Handle URL parameter for resubmitting profile from profile rejection email link
+	 * Checks for ?resubmit=true in URL and opens the submission modal
+	 * Clears the parameter from URL after handling
+	 */
+	useEffect(() => {
+		const resubmitParam = searchParams.get("resubmit");
+		if (resubmitParam === "true") {
+			// Open the submission modal
+			setIsSubmissionModalOpen(true);
+			// Remove the parameter from URL to clean up the address bar
+			searchParams.delete("resubmit");
+			setSearchParams(searchParams, { replace: true });
+		}
+	}, [searchParams, setSearchParams]);
 
 	/**
 	 * Handle clicking on a talent card

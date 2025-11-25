@@ -21,8 +21,8 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 
 interface SuccessModalProps {
-	isOpen: boolean;
-	onClose: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
