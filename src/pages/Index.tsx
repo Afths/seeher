@@ -64,7 +64,9 @@ const Index = () => {
 	const [hasProfile, setHasProfile] = useState<boolean>(false); // Whether the current (signed in) user has a profile (approved or pending)
 	const [profileStatus, setProfileStatus] = useState<ProfileStatus>(null); // Current profile status (APPROVED, PENDING_APPROVAL, NOT_APPROVED or null)
 
-	// Track if we should open submission modal after sign-in (for resubmit flow)
+	// When a user clicks the resubmit profile link in their (rejection) email but isn't signed in yet,
+	// we set a "flag" to remember that after they sign in, we should open the submission modal.
+	// Note: We also use sessionStorage to store the flag, so it survives page refreshes.
 	const shouldOpenSubmissionAfterSignIn = useRef<boolean>(false);
 
 	/**
@@ -102,34 +104,32 @@ const Index = () => {
 	}, [user]);
 
 	/**
-	 * Handle URL parameter for resubmitting profile from profile rejection email link
+	 * Detect when user clicks resubmit link from email
 	 *
-	 * Flow:
-	 * 1. User clicks resubmit link in email → arrives at /?resubmit=true
-	 * 2. If user is signed in → open submission modal directly
-	 * 3. If user is NOT signed in → open sign-in modal
-	 * 4. After user signs in → submission modal opens automatically (handled by the other useEffect)
+	 * - Watches for "?resubmit=true" in the URL
+	 * - If user is signed in → opens submission modal immediately
+	 * - If user is NOT signed in → opens sign-in modal and set flag
+	 *
+	 * This is the entry point of the resubmit flow. Without this, clicking the resubmit link wouldn't do anything.
 	 */
 	useEffect(() => {
 		const resubmitParam = searchParams.get("resubmit");
 
 		if (resubmitParam === "true") {
-			// Remove the parameter from URL to clean up the address bar
+			// Remove the parameter to clean up the URL
 			searchParams.delete("resubmit");
 			setSearchParams(searchParams, { replace: true });
 
-			// Store flag in sessionStorage so we can open submission modal after sign-in
-			sessionStorage.setItem("openResubmitAfterSignIn", "true");
-
 			if (user) {
-				// User is already signed in → open submission modal directly
-				setIsSubmissionModalOpen(true);
-				sessionStorage.removeItem("openResubmitAfterSignIn");
+				setIsSubmissionModalOpen(true); // User is already signed in → open submission modal right away
+				// Make sure no old flags are lingering around
 				shouldOpenSubmissionAfterSignIn.current = false;
+				sessionStorage.removeItem("openResubmitAfterSignIn");
 			} else {
-				// User is not signed in → open sign-in modal
-				// Flag is set, so after sign-in the submission modal will open (see second useEffect)
-				setIsSignInModalOpen(true);
+				setIsSignInModalOpen(true); // Open sign-in modal so user can sign in
+				// User is NOT signed in → we need to remember to open submission modal after sign-in
+				// We flag this via the ref and sessionStorage
+				sessionStorage.setItem("openResubmitAfterSignIn", "true");
 				shouldOpenSubmissionAfterSignIn.current = true;
 			}
 		}
@@ -138,18 +138,42 @@ const Index = () => {
 	/**
 	 * Open submission modal after user signs in (if they came from resubmit link)
 	 *
-	 * This detects when a user signs in after clicking the resubmit link.
-	 * (The flag is set in the first useEffect when ?resubmit=true is detected.)
+	 * - Watches for when a user signs in (user changes from null to a user object)
+	 * - Checks if we have the "flag" set (remembering they came from resubmit link)
+	 * - If yes → automatically closes sign-in modal and opens submission modal
+	 *
+	 * This is what allows the automatic transition from the sign-in modal to the submission modal
 	 */
 	useEffect(() => {
-		if (user && shouldOpenSubmissionAfterSignIn.current && !isSubmissionModalOpen) {
-			// User just signed in and we have the resubmit flag set
+		// Check if we have the "flag" set (in both the ref and sessionStorage)
+		const hasFlagInMemory = shouldOpenSubmissionAfterSignIn.current;
+		const hasFlagInStorage = sessionStorage.getItem("openResubmitAfterSignIn") === "true";
+
+		// Only proceed if the user just signed in, we have the flag set, and the submission modal is not already open
+		if (user && (hasFlagInMemory || hasFlagInStorage) && !isSubmissionModalOpen) {
 			setIsSignInModalOpen(false); // Close sign-in modal
 			setIsSubmissionModalOpen(true); // Open submission modal
-			shouldOpenSubmissionAfterSignIn.current = false; // Reset flag
+			// Clean up the flags - we've used them, so we don't need them anymore
+			shouldOpenSubmissionAfterSignIn.current = false;
 			sessionStorage.removeItem("openResubmitAfterSignIn");
 		}
 	}, [user, isSubmissionModalOpen]);
+
+	/**
+	 * Clean up flag when user signs out
+
+	 *
+	 * This prevents the case where the user clicks the resubmit link (flag is set), closes the browser/app without closing the modals, and returns later, signs in normally (not from resubmit link):
+	 * Without this cleanup, the old flag might still be set and cause unexpected behavior
+	 */
+
+	useEffect(() => {
+		if (!user) {
+			// User signed out → clean up any lingering flags
+			sessionStorage.removeItem("openResubmitAfterSignIn");
+			shouldOpenSubmissionAfterSignIn.current = false;
+		}
+	}, [user]);
 
 	/**
 	 * Handle clicking on a talent card
@@ -189,10 +213,13 @@ const Index = () => {
 	};
 
 	/**
-	 * Close the profile submission modal
+	 * Close the profile submission modal and clean up any resubmit flags that might be lingering
 	 */
 	const handleCloseSubmissionModal = () => {
 		setIsSubmissionModalOpen(false);
+		// Clean up resubmit flag when modal is closed manually
+		sessionStorage.removeItem("openResubmitAfterSignIn");
+		shouldOpenSubmissionAfterSignIn.current = false;
 	};
 
 	/**
@@ -218,10 +245,13 @@ const Index = () => {
 	};
 
 	/**
-	 * Close the sign in modal
+	 * Close the sign in modal and clean up resubmit flag if user closes modal without signing in
 	 */
 	const handleCloseSignInModal = () => {
 		setIsSignInModalOpen(false);
+		// Clean up the flag to prevent it from interfering with other operations
+		sessionStorage.removeItem("openResubmitAfterSignIn");
+		shouldOpenSubmissionAfterSignIn.current = false;
 	};
 
 	/**
