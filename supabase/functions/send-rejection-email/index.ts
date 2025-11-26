@@ -86,6 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
 		}
 
 		// Construct resubmit URL with query parameter to open profile submission modal
+		// The frontend will detect when users need to sign in and open the appropriate modals
 		const resubmitUrl = `${appUrl}/?resubmit=true`;
 
 		// Send rejection email via Loop.so API

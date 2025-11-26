@@ -11,7 +11,7 @@
  * - Access admin dashboard (if admin)
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, User, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +64,9 @@ const Index = () => {
 	const [hasProfile, setHasProfile] = useState<boolean>(false); // Whether the current (signed in) user has a profile (approved or pending)
 	const [profileStatus, setProfileStatus] = useState<ProfileStatus>(null); // Current profile status (APPROVED, PENDING_APPROVAL, NOT_APPROVED or null)
 
+	// Track if we should open submission modal after sign-in (for resubmit flow)
+	const shouldOpenSubmissionAfterSignIn = useRef<boolean>(false);
+
 	/**
 	 * Check if authenticated user has a profile (approved or pending)
 	 * Used to conditionally show/hide the "Submit Profile" button
@@ -100,19 +103,53 @@ const Index = () => {
 
 	/**
 	 * Handle URL parameter for resubmitting profile from profile rejection email link
-	 * Checks for ?resubmit=true in URL and opens the submission modal
-	 * Clears the parameter from URL after handling
+	 *
+	 * Flow:
+	 * 1. User clicks resubmit link in email → arrives at /?resubmit=true
+	 * 2. If user is signed in → open submission modal directly
+	 * 3. If user is NOT signed in → open sign-in modal
+	 * 4. After user signs in → submission modal opens automatically (handled by the other useEffect)
 	 */
 	useEffect(() => {
 		const resubmitParam = searchParams.get("resubmit");
+
 		if (resubmitParam === "true") {
-			// Open the submission modal
-			setIsSubmissionModalOpen(true);
 			// Remove the parameter from URL to clean up the address bar
 			searchParams.delete("resubmit");
 			setSearchParams(searchParams, { replace: true });
+
+			// Store flag in sessionStorage so we can open submission modal after sign-in
+			sessionStorage.setItem("openResubmitAfterSignIn", "true");
+
+			if (user) {
+				// User is already signed in → open submission modal directly
+				setIsSubmissionModalOpen(true);
+				sessionStorage.removeItem("openResubmitAfterSignIn");
+				shouldOpenSubmissionAfterSignIn.current = false;
+			} else {
+				// User is not signed in → open sign-in modal
+				// Flag is set, so after sign-in the submission modal will open (see second useEffect)
+				setIsSignInModalOpen(true);
+				shouldOpenSubmissionAfterSignIn.current = true;
+			}
 		}
-	}, [searchParams, setSearchParams]);
+	}, [searchParams, setSearchParams, user]);
+
+	/**
+	 * Open submission modal after user signs in (if they came from resubmit link)
+	 *
+	 * This detects when a user signs in after clicking the resubmit link.
+	 * (The flag is set in the first useEffect when ?resubmit=true is detected.)
+	 */
+	useEffect(() => {
+		if (user && shouldOpenSubmissionAfterSignIn.current && !isSubmissionModalOpen) {
+			// User just signed in and we have the resubmit flag set
+			setIsSignInModalOpen(false); // Close sign-in modal
+			setIsSubmissionModalOpen(true); // Open submission modal
+			shouldOpenSubmissionAfterSignIn.current = false; // Reset flag
+			sessionStorage.removeItem("openResubmitAfterSignIn");
+		}
+	}, [user, isSubmissionModalOpen]);
 
 	/**
 	 * Handle clicking on a talent card
