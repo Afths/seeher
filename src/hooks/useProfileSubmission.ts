@@ -221,6 +221,10 @@ export function useProfileSubmission() {
 
 			if (error) throw error;
 
+			console.log(
+				"[useProfileSubmission] ✅ Profile submitted successfully, awaiting admin approval"
+			);
+
 			/**
 			 * STEP 6: Send submission confirmation email
 			 *

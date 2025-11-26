@@ -36,7 +36,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { useSuggestExpertise } from "@/hooks/useSuggestExpertise";
 import { useAdminSecurity } from "@/hooks/useAdminSecurity";
-import { SubmissionType } from "@/types";
+import { SubmissionType } from "@/types/database";
 
 export default function AdminDashboard() {
 	const { suggestExpertise, isLoading: isGeneratingExpertise } = useSuggestExpertise(); // AI expertise suggestion hook

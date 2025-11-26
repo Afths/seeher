@@ -13,6 +13,7 @@
  * Routes:
  * - "/" - Main search/discovery page (Index)
  * - "/admin" - Admin dashboard for managing profile submissions
+ * - "/reset-password" - Password reset page (after clicking reset link in email)
  * - "*" - 404 Not Found page (catch-all route)
  */
 
@@ -24,6 +25,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminProtectedRoute } from "@/components/AdminProtectedRoute";
 import Index from "./pages/Index";
 import AdminDashboard from "./pages/AdminDashboard";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 // Create a React Query client instance for managing server state and caching
@@ -55,6 +57,9 @@ const App = () => (
 								</AdminProtectedRoute>
 							}
 						/>
+
+						{/* Password reset page: Allows users to set new password after clicking reset link */}
+						<Route path="/reset-password" element={<ResetPassword />} />
 
 						{/* Catch-all route: 404 Not Found page for any unmatched paths */}
 						<Route path="*" element={<NotFound />} />

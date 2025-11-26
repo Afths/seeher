@@ -28,7 +28,7 @@ import { SignInModal } from "@/components/SignInModal";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { Woman, WomanPublic, ProfileStatus } from "@/types";
+import { Woman, WomanPublic, ProfileStatus } from "@/types/database";
 
 const Index = () => {
 	// React Router navigation hook for client-side navigation
@@ -355,7 +355,7 @@ const Index = () => {
 										size="sm"
 										className="rounded-xl"
 									>
-										Sign In/Register
+										Sign In
 									</Button>
 								)}
 							</div>

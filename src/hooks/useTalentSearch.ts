@@ -15,7 +15,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { WomanPublic } from "@/types";
+import { WomanPublic } from "@/types/database";
 import { searchFiltersSchema, sanitizeInput } from "@/lib/validation";
 
 /**

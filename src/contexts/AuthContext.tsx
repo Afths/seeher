@@ -14,6 +14,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 /**
  * Type definition for the authentication context
@@ -67,6 +68,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		const {
 			data: { subscription },
 		} = supabase.auth.onAuthStateChange((event, session) => {
+			// Log important auth events for debugging
+			if (event === "SIGNED_IN") {
+				console.log("[AuthContext] ✅ User signed in:", session?.user?.email);
+			} else if (event === "SIGNED_OUT") {
+				console.log("[AuthContext] ✅ User signed out");
+			} else if (event === "TOKEN_REFRESHED") {
+				console.log("[AuthContext] 🔄 Session token refreshed");
+			} else if (event === "USER_UPDATED") {
+				console.log("[AuthContext] 👤 User data updated:", session?.user?.email);
+			} else if (event === "PASSWORD_RECOVERY") {
+				console.log("[AuthContext] 🔐 Password recovery initiated");
+			}
+
 			// Update state whenever auth changes
 			setSession(session);
 			setUser(session?.user ?? null); // Use null if session is null (i.e. if user is not logged in)
@@ -96,9 +110,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	 * Sign out function
 	 */
 	const signOut = async (): Promise<void> => {
-		// Clear the current session and signs out the user
-		// The state will be updated automatically via the auth state listener
-		await supabase.auth.signOut();
+		try {
+			// Clear the current session and signs out the user
+			// The state will be updated automatically via the auth state listener
+			const { error } = await supabase.auth.signOut();
+
+			if (error) {
+				console.error("[AuthContext] ❌ Error signing out:", error);
+				toast.error("Failed to sign out. Please try again.");
+				throw error;
+			}
+
+			console.log("[AuthContext] ✅ User signed out successfully");
+			toast.success("Signed out.");
+		} catch (error) {
+			// Error already logged and toast shown above
+			throw error;
+		}
 	};
 
 	/**
