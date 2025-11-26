@@ -246,16 +246,10 @@ const Index = () => {
 	};
 
 	/**
-	 * Close the sign in modal and clean up resubmit flag if user closes modal without signing in
+	 * Close the sign in modal
 	 */
 	const handleCloseSignInModal = () => {
 		setIsSignInModalOpen(false);
-		// Clean up flags if user closed modal WITHOUT signing in
-		// If user IS signed in, it means they just signed in successfully, so we should NOT clear the flags
-		if (!user) {
-			sessionStorage.removeItem("openResubmitAfterSignIn");
-			shouldOpenSubmissionAfterSignIn.current = false;
-		}
 	};
 
 	/**
