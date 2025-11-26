@@ -22,7 +22,7 @@ import { searchFiltersSchema, sanitizeInput } from "@/lib/validation";
  * Defines all the filter criteria users can apply to their search
  */
 interface SearchFilters {
-	interestedIn: string; // "all", "speaker", "panelist", "board member"
+	interestedIn: string; // "all", "Speaker", "Panelist", "Board Member"
 	searchTerm: string; // Search query
 	languages: string[]; // Selected languages
 	areasOfExpertise: string[]; // Selected expertise areas
@@ -84,7 +84,7 @@ export function useTalentSearch() {
 			// Query the secure public view (excludes sensitive fields like email)
 			let query = supabase.from("women_public").select("*");
 
-			// Filter by interest type (speaker, panelist, board member)
+			// Filter by interest type (Speaker, Panelist, Board Member)
 			// interested_in is stored as an array, so we check if the filter value is contained in it
 			if (validatedFilters.interestedIn && validatedFilters.interestedIn !== "all") {
 				query = query.contains("interested_in", [validatedFilters.interestedIn]);

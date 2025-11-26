@@ -380,19 +380,19 @@ const Index = () => {
 									ALL
 								</TabsTrigger>
 								<TabsTrigger
-									value="speaker"
+									value="Speaker"
 									className="rounded-lg text-sm font-medium uppercase"
 								>
 									SPEAKER
 								</TabsTrigger>
 								<TabsTrigger
-									value="panelist"
+									value="Panelist"
 									className="rounded-lg text-sm font-medium uppercase"
 								>
 									PANELIST
 								</TabsTrigger>
 								<TabsTrigger
-									value="board member"
+									value="Board Member"
 									className="rounded-lg text-sm font-medium uppercase"
 								>
 									BOARD MEMBER
