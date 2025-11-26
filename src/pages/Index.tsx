@@ -37,9 +37,8 @@ const Index = () => {
 	// Get URL search parameters for deep linking (e.g., ?resubmit=true)
 	const [searchParams, setSearchParams] = useSearchParams();
 
-	// Authentication hook - provides current user and sign out function
-	// Note: user can be NULL if not logged in
-	const { user, signOut } = useAuth();
+	// Authentication hook (user can be NULL if not logged in)
+	const { user, signOut, loading: authLoading } = useAuth();
 
 	// Check if current user has admin privileges
 	const { isAdmin } = useIsAdmin();
@@ -115,7 +114,9 @@ const Index = () => {
 	useEffect(() => {
 		const resubmitParam = searchParams.get("resubmit");
 
-		if (resubmitParam === "true") {
+		// Important: We must wait for auth to finish loading before checking if user exists.
+		// Otherwise, user might be null even if they're signed in (auth state just hasn't loaded yet).
+		if (resubmitParam === "true" && !authLoading) {
 			// Remove the parameter to clean up the URL
 			searchParams.delete("resubmit");
 			setSearchParams(searchParams, { replace: true });
@@ -133,7 +134,7 @@ const Index = () => {
 				shouldOpenSubmissionAfterSignIn.current = true;
 			}
 		}
-	}, [searchParams, setSearchParams, user]);
+	}, [searchParams, setSearchParams, user, authLoading]);
 
 	/**
 	 * Open submission modal after user signs in (if they came from resubmit link)
