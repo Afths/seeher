@@ -146,6 +146,8 @@ const Index = () => {
 	 * This is what allows the automatic transition from the sign-in modal to the submission modal
 	 */
 	useEffect(() => {
+		if (authLoading) return;
+
 		// Check if we have the "flag" set (in both the ref and sessionStorage)
 		const hasFlagInMemory = shouldOpenSubmissionAfterSignIn.current;
 		const hasFlagInStorage = sessionStorage.getItem("openResubmitAfterSignIn") === "true";
@@ -158,7 +160,7 @@ const Index = () => {
 			shouldOpenSubmissionAfterSignIn.current = false;
 			sessionStorage.removeItem("openResubmitAfterSignIn");
 		}
-	}, [user, isSubmissionModalOpen]);
+	}, [user, authLoading, isSubmissionModalOpen]);
 
 	/**
 	 * Clean up flag when user signs out
