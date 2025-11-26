@@ -354,7 +354,9 @@ export default function AdminDashboard() {
 										<div>
 											<p className="text-sm font-medium">Interested In:</p>
 											<p className="text-sm text-muted-foreground">
-												{submission.interested_in || "Not specified"}
+												{submission.interested_in && submission.interested_in.length > 0
+													? submission.interested_in.join(", ")
+													: "Not specified"}
 											</p>
 										</div>
 									</div>
