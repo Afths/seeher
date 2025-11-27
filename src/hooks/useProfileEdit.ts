@@ -137,7 +137,11 @@ export function useProfileEdit() {
 	/**
 	 * Handle profile update submission - update existing profile in database
 	 */
-	const handleUpdate = async (e: React.FormEvent, profilePicture: File | null) => {
+	const handleUpdate = async (
+		e: React.FormEvent,
+		profilePicture: File | null,
+		removePicture: boolean = false
+	) => {
 		e.preventDefault();
 		setErrors({});
 
@@ -149,16 +153,21 @@ export function useProfileEdit() {
 		setLoading(true);
 
 		try {
-			let profilePictureUrl = formData.profilePictureUrl;
+			let profilePictureUrl: string | null = formData.profilePictureUrl || null;
 
 			/**
-			 * STEP 1: Upload profile picture to Supabase Storage (if provided)
+			 * STEP 1: Handle profile picture removal or upload
 			 *
-			 * Uploads new image file to "profiles" storage bucket and gets public URL.
+			 * If removePicture is true, set profilePictureUrl to null.
+			 * If a new picture is uploaded, upload it to Supabase Storage and get the public URL.
 			 * If user uploads new picture, it replaces the old one.
 			 * The URL is then stored in the database for display.
 			 */
-			if (profilePicture) {
+			if (removePicture) {
+				// User wants to remove the picture
+				profilePictureUrl = null;
+			} else if (profilePicture) {
+				// User wants to upload a new picture
 				const fileExt = profilePicture.name.split(".").pop();
 				const fileName = `${Math.random()}.${fileExt}`;
 				const filePath = `${fileName}`;

@@ -23,20 +23,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Linkedin, Twitter, Facebook, Instagram, Youtube, Globe } from "lucide-react";
+import { Linkedin, Twitter, Facebook, Instagram, Youtube, Globe, Edit } from "lucide-react";
 import { Woman } from "@/types/database";
 
 interface ProfileModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	woman: Woman | null;
+	onEditClick?: () => void; // Edit profile callback when viewing own profile (only passed when the user is viewing their own profile)
 }
 
-export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
+export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileModalProps) {
 	// Don't render if no woman data provided
 	if (!woman) return null;
 
 	const socialLinks = woman.social_media_links as Record<string, string> | null;
+
+	// If 'onEditClick' is provided, it means user is viewing their own profile and therefore they can edit it
+	const showEditButton = !!onEditClick;
 
 	/**
 	 * Determine which social media icon to display based on URL
@@ -57,7 +61,21 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
-					<DialogTitle className="text-2xl font-semibold">{woman.name}</DialogTitle>
+					<div className="flex items-center justify-between">
+						<DialogTitle className="text-2xl font-semibold">{woman.name}</DialogTitle>
+						{/* Edit Profile button - only shown on user's own profile */}
+						{showEditButton && (
+							<Button
+								variant="default"
+								size="sm"
+								onClick={onEditClick}
+								className="rounded-xl mr-8"
+							>
+								<Edit className="w-4 h-4 mr-2" />
+								Edit Profile
+							</Button>
+						)}
+					</div>
 				</DialogHeader>
 
 				{/* MAIN CONTENT GRID - Left column (1/3) for basic info, Right columns (2/3) for detailed info */}
@@ -80,11 +98,11 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 						</Avatar>
 
 						{/* Basic information card */}
-						<Card>
+						<Card className="border-primary/30">
 							<CardContent className="pt-4 space-y-2">
 								{woman.job_title && (
 									<div>
-										<h4 className="text-sm font-medium text-muted-foreground">
+										<h4 className="text-sm font-medium text-primary">
 											JOB TITLE
 										</h4>
 										<p className="text-sm">{woman.job_title}</p>
@@ -93,7 +111,7 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 
 								{woman.company_name && (
 									<div>
-										<h4 className="text-sm font-medium text-muted-foreground">
+										<h4 className="text-sm font-medium text-primary">
 											COMPANY
 										</h4>
 										<p className="text-sm">{woman.company_name}</p>
@@ -102,7 +120,7 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 
 								{woman.nationality && (
 									<div>
-										<h4 className="text-sm font-medium text-muted-foreground">
+										<h4 className="text-sm font-medium text-primary">
 											NATIONALITY
 										</h4>
 										<p className="text-sm">{woman.nationality}</p>
@@ -111,7 +129,7 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 
 								{woman.interested_in && (
 									<div>
-										<h4 className="text-sm font-medium text-muted-foreground">
+										<h4 className="text-sm font-medium text-primary">
 											INTERESTED IN
 										</h4>
 										<p className="text-sm">{woman.interested_in.join(", ")}</p>
@@ -122,14 +140,18 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 
 						{/* Areas of Expertise card */}
 						{woman.areas_of_expertise && woman.areas_of_expertise.length > 0 && (
-							<Card>
+							<Card className="border-primary/30">
 								<CardContent className="pt-4">
-									<h4 className="text-sm font-medium text-muted-foreground mb-2">
+									<h4 className="text-sm font-medium text-primary mb-2">
 										AREAS OF EXPERTISE
 									</h4>
 									<div className="flex flex-wrap gap-1">
 										{woman.areas_of_expertise.map((area) => (
-											<Badge key={area} variant="outline" className="text-xs">
+											<Badge
+												key={area}
+												variant="secondary"
+												className="text-xs bg-primary/10 text-primary border-primary/30"
+											>
 												{area}
 											</Badge>
 										))}
@@ -140,17 +162,17 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 
 						{/* Languages card */}
 						{woman.languages && woman.languages.length > 0 && (
-							<Card>
+							<Card className="border-primary/30">
 								<CardContent className="pt-4">
-									<h4 className="text-sm font-medium text-muted-foreground mb-2">
+									<h4 className="text-sm font-medium text-primary mb-2">
 										LANGUAGES
 									</h4>
 									<div className="flex flex-wrap gap-1">
 										{woman.languages.map((language) => (
 											<Badge
 												key={language}
-												variant="outline"
-												className="text-xs"
+												variant="secondary"
+												className="text-xs bg-primary/10 text-primary border-primary/30"
 											>
 												{language}
 											</Badge>
@@ -165,15 +187,15 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 							woman.contact_number ||
 							woman.alt_contact_name ||
 							socialLinks) && (
-							<Card>
+							<Card className="border-primary/30">
 								<CardContent className="pt-4 space-y-3">
-									<h4 className="text-sm font-medium text-muted-foreground">
+									<h4 className="text-sm font-medium text-primary">
 										CONTACT INFORMATION
 									</h4>
 									<div className="space-y-2">
 										{woman.email && (
 											<div>
-												<h5 className="text-xs font-medium text-muted-foreground">
+												<h5 className="text-xs font-medium text-primary">
 													EMAIL
 												</h5>
 												<p className="text-xs">{woman.email}</p>
@@ -182,7 +204,7 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 
 										{woman.contact_number && (
 											<div>
-												<h5 className="text-xs font-medium text-muted-foreground">
+												<h5 className="text-xs font-medium text-primary">
 													PHONE
 												</h5>
 												<p className="text-xs">{woman.contact_number}</p>
@@ -237,7 +259,7 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 								<h3 className="text-lg font-semibold mb-3">BIOGRAPHY</h3>
 								{woman.short_bio && (
 									<div className="mb-3">
-										<h4 className="text-sm font-medium text-muted-foreground mb-1">
+										<h4 className="text-sm font-medium text-primary mb-1">
 											SHORT BIO
 										</h4>
 										<p className="text-sm">{woman.short_bio}</p>
@@ -245,7 +267,7 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 								)}
 								{woman.long_bio && (
 									<div>
-										<h4 className="text-sm font-medium text-muted-foreground mb-1">
+										<h4 className="text-sm font-medium text-primary mb-1">
 											DETAILED BIO
 										</h4>
 										<p className="text-sm whitespace-pre-wrap">
@@ -262,7 +284,7 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 							{woman.keywords && woman.keywords.length > 0 && (
 								<div>
-									<h4 className="text-sm font-medium text-muted-foreground mb-2">
+									<h4 className="text-sm font-medium text-primary mb-2">
 										KEYWORDS
 									</h4>
 									<div className="flex flex-wrap gap-1">
@@ -281,7 +303,7 @@ export function ProfileModal({ isOpen, onClose, woman }: ProfileModalProps) {
 
 							{woman.memberships && woman.memberships.length > 0 && (
 								<div>
-									<h4 className="text-sm font-medium text-muted-foreground mb-2">
+									<h4 className="text-sm font-medium text-primary mb-2">
 										MEMBERSHIPS
 									</h4>
 									<div className="flex flex-wrap gap-1">

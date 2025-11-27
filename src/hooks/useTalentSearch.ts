@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { WomanPublic } from "@/types/database";
 import { searchFiltersSchema, sanitizeInput } from "@/lib/validation";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Defines all the filter criteria users can apply to their search
@@ -30,6 +31,8 @@ interface SearchFilters {
 }
 
 export function useTalentSearch() {
+	const { user } = useAuth();
+
 	// Search results - array of matching profiles
 	const [results, setResults] = useState<WomanPublic[]>([]);
 
@@ -49,6 +52,51 @@ export function useTalentSearch() {
 		areasOfExpertise: [], // Default: no expertise filter
 		memberships: [], // Default: no membership filter
 	});
+
+	/**
+	 * Load filter options from database
+	 *
+	 * Fetches all unique languages, expertise areas, and memberships from approved profiles to populate the filter dropdowns.
+	 * This runs once when the component mounts, since the filter options do not change.
+	 *
+	 * Note: We use a query to determine the filter options, since a new record with a new/different filter value might be inserted and in that way the filter options would include the new value.
+	 */
+	useEffect(() => {
+		const loadFilterOptions = async () => {
+			// Fetch only approved profiles to build filter options
+			// Note: This requires admin-level access or a public view
+			const { data, error } = await supabase
+				.from("women")
+				.select("languages, areas_of_expertise, memberships")
+				.eq("status", "APPROVED");
+
+			if (!data) {
+				console.error("[useTalentSearch] ❌ Error fetching filter options:", error);
+				return;
+			}
+
+			console.log("[useTalentSearch] ✅ Filter options fetched successfully", data);
+
+			// Use Sets to automatically deduplicate values
+			const languages = new Set<string>();
+			const areas = new Set<string>();
+			const memberships = new Set<string>();
+
+			// Extract all unique values from each profile
+			data.forEach((item) => {
+				item.languages?.forEach((lang) => languages.add(lang));
+				item.areas_of_expertise?.forEach((area) => areas.add(area));
+				item.memberships?.forEach((membership) => memberships.add(membership));
+			});
+
+			// Convert Sets to sorted arrays for display
+			setAllLanguages(Array.from(languages).sort());
+			setAllAreasOfExpertise(Array.from(areas).sort());
+			setAllMemberships(Array.from(memberships).sort());
+		};
+
+		loadFilterOptions();
+	}, []);
 
 	/**
 	 * Perform search based on current filters
@@ -81,8 +129,24 @@ export function useTalentSearch() {
 			// Use validated data if available, otherwise use original filters (they'll be sanitized later)
 			const validatedFilters = validationResult.success ? validationResult.data : filters;
 
-			// Query the secure public view (excludes sensitive fields like email)
-			let query = supabase.from("women_public").select("*");
+			// Query the women table for approved profiles
+			// We exclude sensitive fields (email, contact_number, alt_contact_name)
+			let query = supabase
+				.from("women")
+				.select(
+					"id, name, job_title, company_name, nationality, short_bio, long_bio, profile_picture_url, areas_of_expertise, languages, keywords, memberships, interested_in, created_at, social_media_links, status, user_id"
+				)
+				.eq("status", "APPROVED");
+
+			// If user is signed in, filter out their own profile
+			// Note: We use .or() to handle NULL user_id values correctly
+			// .neq() excludes NULL values, so we need to explicitly include them
+			// This handles edge cases where profiles might not have user_id set yet
+			if (user) {
+				// Filter: (user_id IS NULL) OR (user_id != current_user_id)
+				// This ensures profiles with NULL user_id are still included
+				query = query.or(`user_id.is.null,user_id.neq.${user.id}`);
+			}
 
 			// Filter by interest type (Speaker, Panelist, Board Member)
 			// interested_in is stored as an array, so we check if the filter value is contained in it
@@ -115,9 +179,10 @@ export function useTalentSearch() {
 				throw error;
 			}
 
-			console.log(`[useTalentSearch] ✅ Succesfully filtered ${data.length} results:`, data);
+			console.log(`[useTalentSearch] ✅ Successfully filtered ${data?.length || 0} results`);
 
-			let filteredResults = data || [];
+			// Type assertion needed because Supabase types don't perfectly match our select fields
+			let filteredResults = (data || []) as WomanPublic[];
 
 			/**
 			 * TEXT SEARCH
@@ -217,57 +282,13 @@ export function useTalentSearch() {
 	};
 
 	/**
-	 * Load filter options from database
-	 *
-	 * Fetches all unique languages, expertise areas, and memberships from approved profiles to populate the filter dropdowns.
-	 * This runs once when the component mounts, since the filter options do not change.
-	 *
-	 * Note: We use a query to determine the filter options, since a new record with a new/different filter value might be inserted and in that way the filter options would include the new value.
-	 */
-	useEffect(() => {
-		const loadFilterOptions = async () => {
-			// Fetch only approved profiles to build filter options
-			// Note: This requires admin-level access or a public view
-			const { data, error } = await supabase
-				.from("women")
-				.select("languages, areas_of_expertise, memberships")
-				.eq("status", "APPROVED");
-
-			if (!data) {
-				console.error("[useTalentSearch] ❌ Error fetching filter options:", error);
-				return;
-			}
-
-			console.log("[useTalentSearch] ✅ Filter options fetched successfully", data);
-
-			// Use Sets to automatically deduplicate values
-			const languages = new Set<string>();
-			const areas = new Set<string>();
-			const memberships = new Set<string>();
-
-			// Extract all unique values from each profile
-			data.forEach((item) => {
-				item.languages?.forEach((lang) => languages.add(lang));
-				item.areas_of_expertise?.forEach((area) => areas.add(area));
-				item.memberships?.forEach((membership) => memberships.add(membership));
-			});
-
-			// Convert Sets to sorted arrays for display
-			setAllLanguages(Array.from(languages).sort());
-			setAllAreasOfExpertise(Array.from(areas).sort());
-			setAllMemberships(Array.from(memberships).sort());
-		};
-
-		loadFilterOptions();
-	}, []);
-
-	/**
-	 * Auto-search when filters change
+	 * Auto-search when filters change or user changes
 	 * This effect triggers an initial search (with default filters) and a new search whenever any filter is updated.
+	 * Also re-runs when user changes (login/logout) to update the exclusion of own profile
 	 */
 	useEffect(() => {
 		performSearch();
-	}, [filters]);
+	}, [filters, user?.id]);
 
 	return {
 		results, // Array of matching profiles

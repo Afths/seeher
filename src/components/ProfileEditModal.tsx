@@ -36,10 +36,17 @@ interface ProfileEditModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onNoProfileFound: () => void;
+	onProfileUpdated?: () => void; // Optional callback when profile is successfully updated
 }
 
-export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileEditModalProps) {
+export function ProfileEditModal({
+	isOpen,
+	onClose,
+	onNoProfileFound,
+	onProfileUpdated,
+}: ProfileEditModalProps) {
 	const [profilePicture, setProfilePicture] = useState<File | null>(null);
+	const [removePicture, setRemovePicture] = useState<boolean>(false);
 
 	// Profile editing hook - handles fetching and updating profile
 	const {
@@ -73,6 +80,10 @@ export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileE
 				if (!profileFound && onNoProfileFound) {
 					onClose();
 					onNoProfileFound();
+				} else {
+					// Reset remove picture flag when profile is loaded
+					setRemovePicture(false);
+					setProfilePicture(null);
 				}
 			};
 			loadProfile();
@@ -85,10 +96,16 @@ export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileE
 	 * Updates existing profile with new data
 	 */
 	const handleFormSubmit = async (e: React.FormEvent) => {
-		const success = await handleUpdate(e, profilePicture);
+		const success = await handleUpdate(e, profilePicture, removePicture);
 		if (success) {
 			setProfilePicture(null);
+			setRemovePicture(false);
 			onClose();
+
+			// Notify parent component that profile was updated, so it can refresh the cached profile data to show the updated profile when the profile modal is reopened
+			if (onProfileUpdated) {
+				onProfileUpdated();
+			}
 		}
 	};
 
@@ -99,6 +116,7 @@ export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileE
 	const handleClose = () => {
 		resetForm();
 		setProfilePicture(null);
+		setRemovePicture(false);
 		onClose();
 	};
 
@@ -201,7 +219,34 @@ export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileE
 					{/* Profile Picture Upload */}
 					<div>
 						<Label htmlFor="edit-profilePicture">Profile Picture</Label>
-						<div className="mt-1">
+						<div className="mt-1 space-y-2">
+							{formData.profilePictureUrl && !removePicture && (
+								<div className="flex items-center gap-2 mb-2">
+									<img
+										src={formData.profilePictureUrl}
+										alt="Current profile picture"
+										className="w-16 h-16 rounded-full object-cover border border-border"
+									/>
+									<Button
+										type="button"
+										variant="destructive"
+										size="sm"
+										onClick={() => {
+											setRemovePicture(true);
+											setProfilePicture(null);
+											// Clear the file input
+											const fileInput = document.getElementById(
+												"edit-profilePicture"
+											) as HTMLInputElement;
+											if (fileInput) {
+												fileInput.value = "";
+											}
+										}}
+									>
+										Remove Picture
+									</Button>
+								</div>
+							)}
 							<Input
 								id="edit-profilePicture"
 								type="file"
@@ -209,6 +254,10 @@ export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileE
 								onChange={(e) => {
 									const file = e.target.files?.[0];
 									setProfilePicture(file || null);
+									// If user selects a new file, cancel the remove action
+									if (file) {
+										setRemovePicture(false);
+									}
 								}}
 								className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
 							/>
@@ -217,7 +266,12 @@ export function ProfileEditModal({ isOpen, onClose, onNoProfileFound }: ProfileE
 									New picture selected: {profilePicture.name}
 								</p>
 							)}
-							{formData.profilePictureUrl && !profilePicture && (
+							{removePicture && !profilePicture && (
+								<p className="text-sm text-destructive mt-1">
+									Picture will be removed when you save.
+								</p>
+							)}
+							{formData.profilePictureUrl && !profilePicture && !removePicture && (
 								<p className="text-sm text-muted-foreground mt-1">
 									Current picture will be kept. Upload a new file to replace it.
 								</p>

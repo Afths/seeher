@@ -95,7 +95,7 @@ seeher/
 
     - User enters search term or adjusts filters
     - `useTalentSearch` hook triggers search
-    - Query Supabase `women_public` view (secure, excludes sensitive data)
+    - Query Supabase `women` table with explicit field selection (excludes sensitive data, filters out own profile)
     - Apply text search and array filters client-side
     - Sort by completeness and display results
 

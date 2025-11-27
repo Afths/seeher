@@ -6,14 +6,15 @@
  * - Filter by interest type (Speaker, Panelist, Board Member)
  * - Filter by languages, areas of expertise, and memberships
  * - View profile cards and click to see detailed profiles
- * - Submit new profiles
- * - Sign in/out
+ * - Submit a profile
+ *  - View and edit their profile
  * - Access admin dashboard (if admin)
+ * - Sign in/out
  */
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, User, LogOut } from "lucide-react";
+import { Search, User, LogOut, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,11 +58,14 @@ const Index = () => {
 	const [searchInput, setSearchInput] = useState<string>(""); // Text input for search
 	const [selectedWoman, setSelectedWoman] = useState<Woman | null>(null); // Selected profile for modal
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false); // Profile detail modal visibility
+	const [isViewingOwnProfile, setIsViewingOwnProfile] = useState<boolean>(false); // Track if the user is viewing own profile (to show edit button)
 	const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState<boolean>(false); // Profile submission modal visibility
 	const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false); // Profile edit modal visibility
 	const [isSignInModalOpen, setIsSignInModalOpen] = useState<boolean>(false); // Sign in modal visibility
-	const [hasProfile, setHasProfile] = useState<boolean>(false); // Whether the current (signed in) user has a profile (approved or pending)
-	const [profileStatus, setProfileStatus] = useState<ProfileStatus>(null); // Current profile status (APPROVED, PENDING_APPROVAL, NOT_APPROVED or null)
+	const [userProfile, setUserProfile] = useState<Woman | null>(null); // Current user's full profile data
+
+	const hasProfile = userProfile !== null;
+	const profileStatus = (userProfile?.status as ProfileStatus) ?? null;
 
 	// When a user clicks the resubmit profile link in their (rejection) email but isn't signed in yet,
 	// we set a "flag" to remember that after they sign in, we should open the submission modal.
@@ -69,37 +73,44 @@ const Index = () => {
 	const shouldOpenSubmissionAfterSignIn = useRef<boolean>(false);
 
 	/**
+	 * Fetch user's profile data (if they have an approved or pending profile)
+	 * Note: Not approved profiles are not considered as "having a profile" (so users can resubmit after rejection)
+	 */
+	const fetchUserProfile = async (): Promise<Woman | null> => {
+		if (!user) {
+			setUserProfile(null);
+			return null;
+		}
+
+		// Fetch profile data
+		const { data, error } = await supabase
+			.from("women")
+			.select("*")
+			.eq("user_id", user.id)
+			.in("status", ["APPROVED", "PENDING_APPROVAL"]) // Only consider approved or pending profiles (not rejected)
+			.order("created_at", { ascending: false })
+			.limit(1)
+			.maybeSingle();
+
+		if (error) {
+			console.error("[Index] ❌ Error fetching user profile:", error);
+			setUserProfile(null);
+			return null;
+		}
+
+		const profileData = data ? (data as Woman) : null;
+		setUserProfile(profileData); // Cache profile data
+
+		return profileData;
+	};
+
+	/**
 	 * Check if authenticated user has a profile (approved or pending)
 	 * Used to conditionally show/hide the "Submit Profile" button
-	 * Note: Rejected profiles (NOT_APPROVED) are not considered as "having a profile" so users can resubmit after rejection
+	 * Also caches the full profile data for the "My Profile" button (avoids redundant queries)
 	 */
 	useEffect(() => {
-		const checkUserProfile = async () => {
-			if (!user) {
-				setHasProfile(false);
-				setProfileStatus(null);
-				return;
-			}
-
-			const { data, error } = await supabase
-				.from("women")
-				.select("id, status")
-				.eq("user_id", user.id)
-				.in("status", ["APPROVED", "PENDING_APPROVAL"]) // Only consider approved or pending profiles
-				.maybeSingle();
-
-			if (error) {
-				console.error("[Index] ❌ Error checking user profile:", error);
-				setHasProfile(false);
-				setProfileStatus(null);
-				return;
-			}
-
-			setHasProfile(!!data);
-			setProfileStatus(data ? (data.status as ProfileStatus) : null);
-		};
-
-		checkUserProfile();
+		fetchUserProfile();
 	}, [user]);
 
 	/**
@@ -205,6 +216,7 @@ const Index = () => {
 	const handleCloseModal = () => {
 		setIsModalOpen(false);
 		setSelectedWoman(null);
+		setIsViewingOwnProfile(false);
 	};
 
 	/**
@@ -226,11 +238,36 @@ const Index = () => {
 	};
 
 	/**
+	 * Open My Profile modal - displays user's own profile
+	 * Only available to authenticated users who have an approved profile
+	 */
+	const handleOpenMyProfile = () => {
+		setSelectedWoman(userProfile!); // Safe to assert since the 'My Profile' button is only shown when profile is approved (i.e. guaranteed to exist)
+		setIsViewingOwnProfile(true); // Mark as viewing own profile to show edit button
+		setIsModalOpen(true);
+	};
+
+	/**
+	 * Handle profile update
+	 * This refreshes the cached profile data and reopens the profile modal (after editing) to show the updated profile
+	 */
+	const handleProfileUpdated = async () => {
+		// Refresh the cached profile data
+		const updatedProfile = await fetchUserProfile();
+
+		// Update the modal to show the updated profile
+		setSelectedWoman(updatedProfile);
+		setIsViewingOwnProfile(true);
+		setIsModalOpen(true);
+	};
+
+	/**
 	 * Open the profile edit modal
 	 * Only available to authenticated users who have submitted a profile
 	 */
 	const handleOpenEditModal = () => {
-		setIsEditModalOpen(true);
+		setIsModalOpen(false); // Close profile modal first
+		setIsEditModalOpen(true); // Then open edit modal
 	};
 
 	/**
@@ -341,7 +378,9 @@ const Index = () => {
 						{/* Right side: User actions */}
 						<div className="flex-1 flex justify-end">
 							<div className="flex items-center gap-4">
-								{/* Submit Profile button - shown when user has not submitted a profile yet OR when their submission is pending */}
+								{/* Submit Profile button shown when user is :
+								- Signed out or
+								- Signed in and has not submitted a profile yet OR their submission is pending */}
 								{(!hasProfile || profileStatus === "PENDING_APPROVAL") && (
 									<Tooltip>
 										<TooltipTrigger asChild>
@@ -359,6 +398,7 @@ const Index = () => {
 												</Button>
 											</span>
 										</TooltipTrigger>
+										{/* When user is not signed in */}
 										{!user && (
 											<TooltipContent>
 												<p>
@@ -366,6 +406,7 @@ const Index = () => {
 												</p>
 											</TooltipContent>
 										)}
+										{/* When user's signed in and their profile is under review */}
 										{profileStatus === "PENDING_APPROVAL" && (
 											<TooltipContent>
 												<p>
@@ -380,16 +421,16 @@ const Index = () => {
 								{/* Conditional rendering based on authentication state */}
 								{user ? (
 									<>
-										{/* Edit My Profile button - visible when user is logged in AND has an APPROVED profile */}
+										{/* My Profile button - shown when user is signed in and has an APPROVED profile */}
 										{profileStatus === "APPROVED" && (
 											<Button
-												variant="secondary"
+												variant="default"
 												size="sm"
 												className="rounded-xl"
-												onClick={handleOpenEditModal}
+												onClick={handleOpenMyProfile}
 											>
 												<User className="w-4 h-4 mr-2" />
-												Edit My Profile
+												My Profile
 											</Button>
 										)}
 										{/* Admin Dashboard button - only visible to admins */}
@@ -439,28 +480,28 @@ const Index = () => {
 					{/* Options: All, Speaker, Panelist, Board Member */}
 					<div className="flex justify-center">
 						<Tabs value={filters.interestedIn} onValueChange={handleTabChange}>
-							<TabsList className="bg-card/50 backdrop-blur-sm border border-border/40 rounded-xl p-1">
+							<TabsList className="bg-card/50 backdrop-blur-sm border border-primary/30 rounded-xl p-1">
 								<TabsTrigger
 									value="all"
-									className="rounded-lg text-sm font-medium uppercase"
+									className="rounded-lg text-sm font-medium uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 								>
 									ALL
 								</TabsTrigger>
 								<TabsTrigger
 									value="Speaker"
-									className="rounded-lg text-sm font-medium uppercase"
+									className="rounded-lg text-sm font-medium uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 								>
 									SPEAKER
 								</TabsTrigger>
 								<TabsTrigger
 									value="Panelist"
-									className="rounded-lg text-sm font-medium uppercase"
+									className="rounded-lg text-sm font-medium uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 								>
 									PANELIST
 								</TabsTrigger>
 								<TabsTrigger
 									value="Board Member"
-									className="rounded-lg text-sm font-medium uppercase"
+									className="rounded-lg text-sm font-medium uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 								>
 									BOARD MEMBER
 								</TabsTrigger>
@@ -478,19 +519,38 @@ const Index = () => {
 									value={searchInput}
 									onChange={(e) => setSearchInput(e.target.value)}
 									onKeyPress={handleKeyPress}
-									className="bg-card/50 backdrop-blur-sm border-border/40 rounded-xl pl-4 pr-12"
+									className={`bg-card/50 backdrop-blur-sm border-primary/30 rounded-xl pl-4 ${
+										searchInput ? "pr-20" : "pr-12"
+									}`}
 								/>
+								{/* Clear button (X) - shown when there's text in the input */}
+								{searchInput && (
+									<button
+										type="button"
+										onClick={() => {
+											setSearchInput("");
+											// Clear the search term in filters and trigger search
+											setFilters((prev) => ({
+												...prev,
+												searchTerm: "",
+											}));
+										}}
+										className="absolute right-10 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-colors"
+										aria-label="Clear search"
+									>
+										<X className="w-4 h-4" />
+									</button>
+								)}
 								{/* Search icon positioned on the right */}
 								<Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
 							</div>
 							{/* Search button - triggers search when clicked */}
-							{/* Disabled when input is empty or while loading */}
+							{/* Disabled when loading */}
 							<Button
 								onClick={handleSearch}
 								size="sm"
 								className="rounded-xl px-6"
-								// Disable button when loading or input is empty
-								disabled={loading || !searchInput.trim()}
+								disabled={loading}
 							>
 								Search
 							</Button>
@@ -528,8 +588,10 @@ const Index = () => {
 							{/* Results count */}
 							<div className="flex items-center justify-between">
 								<p className="text-sm text-muted-foreground">
-									{results.length} {results.length === 1 ? "result" : "results"}{" "}
-									found
+									<span className="text-primary font-semibold">
+										{results.length}
+									</span>{" "}
+									{results.length === 1 ? "result" : "results"} found
 								</p>
 							</div>
 
@@ -567,17 +629,18 @@ const Index = () => {
 
 			{/* MODALS */}
 			{/* Profile detail modal - shows full profile when a card is clicked */}
-			<ProfileModal isOpen={isModalOpen} onClose={handleCloseModal} woman={selectedWoman} />
+			<ProfileModal
+				isOpen={isModalOpen}
+				onClose={handleCloseModal}
+				woman={selectedWoman}
+				onEditClick={isViewingOwnProfile ? handleOpenEditModal : undefined} // Only pass edit callback when viewing own profile
+			/>
 
 			{/* Profile submission modal - allows users to submit new profiles */}
 			<ProfileSubmissionModal
 				isOpen={isSubmissionModalOpen}
 				onClose={handleCloseSubmissionModal}
-				onProfileSubmitted={() => {
-					// Update state when profile is successfully submitted
-					setHasProfile(true);
-					setProfileStatus("PENDING_APPROVAL"); // Set status to pending so button shows as disabled with tooltip
-				}}
+				onProfileSubmitted={fetchUserProfile} // Refresh cached profile after submission
 			/>
 
 			{/* Profile edit modal - allows authenticated users to edit their own profile */}
@@ -585,6 +648,7 @@ const Index = () => {
 				isOpen={isEditModalOpen}
 				onClose={handleCloseEditModal}
 				onNoProfileFound={handleOpenSubmissionModal} // If user has no profile, open profile submission modal instead
+				onProfileUpdated={handleProfileUpdated} // Refresh cached profile and reopen modal with updated data
 			/>
 
 			{/* Sign in modal - authentication modal */}

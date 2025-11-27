@@ -33,9 +33,8 @@ export type WomanPublic = Pick<
 	| "interested_in"
 	| "created_at"
 	| "social_media_links"
-> & {
-	status: string | null;
-};
+	| "status"
+>;
 
 /**
  * Profile submission type for admin dashboard

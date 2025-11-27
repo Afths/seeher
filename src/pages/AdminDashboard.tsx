@@ -246,7 +246,7 @@ export default function AdminDashboard() {
 						<div className="flex items-center gap-4">
 							{/* Back to home button */}
 							<Link to="/">
-								<Button variant="outline" size="sm" className="rounded-xl">
+								<Button variant="default" size="sm" className="rounded-xl">
 									<ArrowLeft className="w-4 h-4 mr-2" />
 									Back to Home
 								</Button>
@@ -267,7 +267,8 @@ export default function AdminDashboard() {
 						<h2 className="text-2xl font-semibold mb-2">Profile Submissions</h2>
 						{/* Display count of pending submissions */}
 						<p className="text-muted-foreground">
-							{submissions.length} pending submission
+							<span className="text-primary font-semibold">{submissions.length}</span>{" "}
+							pending submission
 							{submissions.length !== 1 ? "s" : ""}
 						</p>
 					</div>
@@ -307,7 +308,7 @@ export default function AdminDashboard() {
 					/* Submissions grid - display each submission in a card */
 					<div className="grid gap-6">
 						{submissions.map((submission) => (
-							<Card key={submission.id} className="w-full">
+							<Card key={submission.id} className="w-full border-primary/30">
 								<CardHeader>
 									<div className="flex items-center justify-between">
 										{/* Profile name */}
@@ -354,7 +355,8 @@ export default function AdminDashboard() {
 										<div>
 											<p className="text-sm font-medium">Interested In:</p>
 											<p className="text-sm text-muted-foreground">
-												{submission.interested_in && submission.interested_in.length > 0
+												{submission.interested_in &&
+												submission.interested_in.length > 0
 													? submission.interested_in.join(", ")
 													: "Not specified"}
 											</p>

@@ -98,7 +98,7 @@ export function TalentCard({
 
 	return (
 		<Card
-			className="backdrop-blur-sm bg-card/80 border-border/40 rounded-2xl hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-500 ease-out cursor-pointer"
+			className="backdrop-blur-sm bg-card/80 border-primary/30 rounded-2xl hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-500 ease-out cursor-pointer"
 			onClick={onClick}
 		>
 			<CardContent className="p-6">
@@ -143,7 +143,7 @@ export function TalentCard({
 
 						{/* Job title and company */}
 						{(jobTitle || companyName) && (
-							<p className="text-sm text-muted-foreground mb-2">
+							<p className="text-sm text-primary font-medium mb-2">
 								{jobTitle
 									? `${jobTitle}${companyName ? ` at ${companyName}` : ""}`
 									: `at ${companyName}`}
