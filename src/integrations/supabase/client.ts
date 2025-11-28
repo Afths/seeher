@@ -53,8 +53,8 @@ if (!SUPABASE_PUBLISHABLE_KEY) {
  */
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,        // Store auth tokens in browser localStorage
+    storage: localStorage,      // Store auth tokens in browser localStorage
     persistSession: true,       // Keep session alive across page refreshes
-    autoRefreshToken: true,      // Automatically refresh expired access tokens
+    autoRefreshToken: true,     // Automatically refresh expired access tokens
   }
 });

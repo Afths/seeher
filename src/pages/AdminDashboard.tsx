@@ -2,21 +2,21 @@
  * ADMIN DASHBOARD PAGE
  *
  * This page is accessible only to admin users and provides functionality to:
- * - Review profile submissions that are pending approval
+ * - Review profile submissions with status filtering (Pending/Approved/Not Approved/All)
  * - Approve profiles (changes status to APPROVED and sends welcome email)
  * - Reject profiles (changes status to NOT_APPROVED)
- * - View rejected profiles
+ * - View all submission statuses with filter (default: pending)
  * - Use AI to suggest areas of expertise for profiles
  *
  * Security:
  * - Protected route - redirects non-admin users to home page
  * - Logs all admin actions for security auditing
  *
- * The dashboard shows profiles with status "PENDING_APPROVAL" or "NOT_APPROVED"
- * and allows admins to take action on them.
+ * The dashboard shows profiles filtered by status (default: PENDING_APPROVAL)
+ * and allows admins to take action on pending submissions.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +31,13 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
@@ -38,28 +45,39 @@ import { useSuggestExpertise } from "@/hooks/useSuggestExpertise";
 import { useAdminSecurity } from "@/hooks/useAdminSecurity";
 import { SubmissionType } from "@/types/database";
 
+type StatusFilter = "PENDING_APPROVAL" | "APPROVED" | "NOT_APPROVED" | "ALL";
+
 export default function AdminDashboard() {
 	const { suggestExpertise, isLoading: isGeneratingExpertise } = useSuggestExpertise(); // AI expertise suggestion hook
 	const { logAdminAction } = useAdminSecurity(); // Security logging hook
 
 	const [submissions, setSubmissions] = useState<SubmissionType[]>([]); // List of submissions to review
 	const [loading, setLoading] = useState<boolean>(true); // Loading state
+	const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING_APPROVAL"); // Status filter (default: pending)
 	const [rejectDialogOpen, setRejectDialogOpen] = useState<boolean>(false); // Rejection dialog state
 	const [selectedSubmission, setSelectedSubmission] = useState<SubmissionType | null>(null); // Submission being rejected
 	const [rejectionReason, setRejectionReason] = useState<string>(""); // Rejection reason input
 
 	/**
 	 * Fetch profile submissions from database
-	 * Retrieves pending submissions
-	 * Ordered by creation date (newest first)
+	 * Retrieves submissions based on selected status filter
 	 */
-	const fetchSubmissions = async () => {
+	const fetchSubmissions = useCallback(async () => {
 		try {
-			const { data, error } = await supabase
+			setLoading(true);
+
+			// Build query with status filter and ordering
+			let query = supabase
 				.from("women")
 				.select("*")
-				.eq("status", "PENDING_APPROVAL") // Only show pending submissions
 				.order("created_at", { ascending: false }); // Newest first
+
+			// Apply status filter only if not "ALL"
+			if (statusFilter !== "ALL") {
+				query = query.eq("status", statusFilter);
+			}
+
+			const { data, error } = await query;
 
 			if (error) {
 				console.error("[AdminDashboard] ❌ Error fetching submissions:", error);
@@ -74,14 +92,14 @@ export default function AdminDashboard() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [statusFilter]);
 
 	/**
-	 * Fetch submissions when component mounts
+	 * Fetch submissions when status filter changes (and on mount)
 	 */
 	useEffect(() => {
 		fetchSubmissions();
-	}, []);
+	}, [fetchSubmissions]);
 
 	/**
 	 * Handle approving a profile submission
@@ -262,13 +280,37 @@ export default function AdminDashboard() {
 			{/* MAIN CONTENT AREA */}
 			<div className="container mx-auto px-6 py-8">
 				{/* Dashboard header with stats and actions */}
-				<div className="mb-6 flex items-center justify-between">
-					<div>
+				<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<div className="flex-1">
 						<h2 className="text-2xl font-semibold mb-2">Profile Submissions</h2>
-						{/* Display count of pending submissions */}
+						{/* Status filter dropdown */}
+						<div className="mb-2">
+							<Select
+								value={statusFilter}
+								onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+							>
+								<SelectTrigger className="w-[180px]">
+									<SelectValue placeholder="Filter by status" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="PENDING_APPROVAL">Pending</SelectItem>
+									<SelectItem value="APPROVED">Approved</SelectItem>
+									<SelectItem value="NOT_APPROVED">Not Approved</SelectItem>
+									<SelectItem value="ALL">All</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+						{/* Display count based on selected filter */}
 						<p className="text-muted-foreground">
 							<span className="text-primary font-semibold">{submissions.length}</span>{" "}
-							pending submission
+							{statusFilter === "PENDING_APPROVAL"
+								? "pending"
+								: statusFilter === "APPROVED"
+								? "approved"
+								: statusFilter === "NOT_APPROVED"
+								? "not approved"
+								: "total"}{" "}
+							submission
 							{submissions.length !== 1 ? "s" : ""}
 						</p>
 					</div>
@@ -314,12 +356,21 @@ export default function AdminDashboard() {
 										{/* Profile name */}
 										<CardTitle className="text-xl">{submission.name}</CardTitle>
 										<div className="flex items-center gap-2">
-											{/* Status badge - different color for pending vs rejected */}
+											{/* Status badge - different color for pending, approved, and rejected */}
 											<Badge
 												variant={
 													submission.status === "PENDING_APPROVAL"
 														? "secondary"
+														: submission.status === "APPROVED"
+														? "default"
 														: "destructive"
+												}
+												className={
+													submission.status === "APPROVED"
+														? "bg-green-600 hover:bg-green-700"
+														: submission.status === "PENDING_APPROVAL"
+														? "bg-yellow-500 hover:bg-yellow-600 text-yellow-950"
+														: ""
 												}
 											>
 												{submission.status?.replace("_", " ")}
