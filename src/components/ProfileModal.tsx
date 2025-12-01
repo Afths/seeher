@@ -4,7 +4,7 @@
  * Displays a detailed view of a woman professional's profile in a modal dialog.
  * Shows comprehensive information including:
  * - Profile picture and basic info (job title, company, nationality, interests)
- * - Areas of expertise and languages
+ * - Areas of expertise (with endorsement functionality) and languages
  * - Contact information (email, phone, alternative contact)
  * - Social media links with platform-specific icons
  * - Biography (short and detailed)
@@ -14,6 +14,7 @@
  * - Responsive layout (1 column on mobile, 3 columns on desktop)
  * - Scrollable content for long profiles
  * - Social media icons that open links in new tabs
+ * - Endorsement system for areas of expertise
  * - Graceful handling of missing data
  */
 
@@ -23,19 +24,36 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Linkedin, Twitter, Facebook, Instagram, Youtube, Globe, Edit } from "lucide-react";
+import {
+	Linkedin,
+	Twitter,
+	Facebook,
+	Instagram,
+	Youtube,
+	Globe,
+	Edit,
+	ThumbsUp,
+} from "lucide-react";
 import { Woman } from "@/types/database";
+import { useEndorsements } from "@/hooks/useEndorsements";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProfileModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	woman: Woman | null;
-	onEditClick?: () => void; // Edit profile callback when viewing own profile (only passed when the user is viewing their own profile)
+	woman: Woman;
+	onEditClick?: () => void; // Edit profile callback - only passed when the user is viewing their own profile
 }
 
 export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileModalProps) {
-	// Don't render if no woman data provided
-	if (!woman) return null;
+	const { user } = useAuth();
+
+	const {
+		loading: endorsementsLoading,
+		getEndorsementCount,
+		isEndorsedByUser,
+		toggleEndorsement,
+	} = useEndorsements(woman.id, user?.id);
 
 	const socialLinks = woman.social_media_links as Record<string, string> | null;
 
@@ -145,16 +163,58 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 									<h4 className="text-sm font-medium text-primary mb-2">
 										AREAS OF EXPERTISE
 									</h4>
-									<div className="flex flex-wrap gap-1">
-										{woman.areas_of_expertise.map((area) => (
-											<Badge
-												key={area}
-												variant="secondary"
-												className="text-xs bg-primary/10 text-primary border-primary/30"
-											>
-												{area}
-											</Badge>
-										))}
+									<div className="space-y-2">
+										{woman.areas_of_expertise.map((area) => {
+											const count = getEndorsementCount(area);
+											const isEndorsed = isEndorsedByUser(area);
+											const canEndorse = user && !showEditButton; // A user can endorse if they are signed in and viewing someone else's profile (not theirs)
+
+											return (
+												<div
+													key={area}
+													className="flex items-center gap-2 flex-wrap"
+												>
+													<Badge
+														variant="secondary"
+														className="text-xs bg-primary/10 text-primary border-primary/30 flex items-center gap-1.5"
+													>
+														{area}
+														{canEndorse && (
+															<button
+																onClick={() =>
+																	toggleEndorsement(area)
+																}
+																disabled={endorsementsLoading}
+																className={`ml-1 p-0.5 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+																	isEndorsed
+																		? "text-blue-600 hover:text-blue-700"
+																		: "text-muted-foreground hover:text-primary"
+																}`}
+																aria-label={
+																	isEndorsed
+																		? "Remove endorsement"
+																		: "Endorse this area"
+																}
+															>
+																<ThumbsUp className="w-3 h-3" />
+															</button>
+														)}
+													</Badge>
+													{count > 0 && (
+														<span className="text-xs text-muted-foreground">
+															(
+															<span className="text-primary font-semibold">
+																{count}
+															</span>{" "}
+															{count === 1
+																? "endorsement"
+																: "endorsements"}
+															)
+														</span>
+													)}
+												</div>
+											);
+										})}
 									</div>
 								</CardContent>
 							</Card>

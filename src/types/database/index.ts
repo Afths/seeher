@@ -47,3 +47,9 @@ export type SubmissionType = Tables<"women">;
  * Represents the possible statuses a profile can have in the database
  */
 export type ProfileStatus = "PENDING_APPROVAL" | "APPROVED" | "NOT_APPROVED" | null;
+
+/**
+ * Endorsement type
+ * Represents an endorsement of a specific area of expertise for a profile
+ */
+export type Endorsement = Tables<"endorsements">;
