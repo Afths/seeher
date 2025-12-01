@@ -64,9 +64,25 @@ const handler = async (req: Request): Promise<Response> => {
 				}
 			);
 		}
-		// Generate a magic link URL for the user to sign in
-		const supabaseUrl = Deno.env.get("SUPABASE_URL");
-		const magicLinkUrl = `${supabaseUrl}/auth/v1/magiclink?email=${encodeURIComponent(email)}`;
+		// Get app URL for view profile link
+		const appUrl = Deno.env.get("APP_URL");
+		if (!appUrl) {
+			console.error("[send-approval-email] ❌ APP_URL environment variable is not set");
+			return new Response(
+				JSON.stringify({
+					error: "App URL not configured",
+					details: "APP_URL environment variable is missing",
+				}),
+				{
+					status: 500,
+					headers: { "Content-Type": "application/json", ...corsHeaders },
+				}
+			);
+		}
+
+		// Construct view profile URL with query parameter to open "My Profile" modal
+		// The frontend will detect when users need to sign in and open the appropriate modals
+		const viewProfileUrl = `${appUrl}/?viewProfile=true`;
 
 		// Send approval email via Loop.so API
 		// Loop.so uses transactional email endpoint
@@ -81,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
 				email: email,
 				dataVariables: {
 					name: name,
-					magicLinkUrl: magicLinkUrl,
+					view_profile_url: viewProfileUrl,
 				},
 			}),
 		});

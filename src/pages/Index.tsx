@@ -12,7 +12,7 @@
  * - Sign in/out
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, User, LogOut, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,9 +68,14 @@ const Index = () => {
 	const profileStatus = (userProfile?.status as ProfileStatus) ?? null;
 
 	// When a user clicks the resubmit profile link in their (rejection) email but isn't signed in yet,
-	// we set a "flag" to remember that after they sign in, we should open the submission modal.
+	// we set a "flag" to remember that after they sign in, we should open the 'Submit Profile' modal.
 	// Note: We also use sessionStorage to store the flag, so it survives page refreshes.
 	const shouldOpenSubmissionAfterSignIn = useRef<boolean>(false);
+
+	// When a user clicks the view profile link in their (approval) email but isn't signed in yet,
+	// we set a "flag" to remember that after they sign in, we should open the "My Profile" modal.
+	// Note: We also use sessionStorage to store the flag, so it survives page refreshes.
+	const shouldOpenMyProfileAfterSignIn = useRef<boolean>(false);
 
 	/**
 	 * Fetch user's profile data (if they have an approved or pending profile)
@@ -148,6 +153,85 @@ const Index = () => {
 	}, [searchParams, setSearchParams, user, authLoading]);
 
 	/**
+	 * Open My Profile modal - displays user's own profile
+	 * Only available to authenticated users who have an approved profile
+	 */
+	const handleOpenMyProfile = useCallback(() => {
+		setSelectedWoman(userProfile);
+		setIsViewingOwnProfile(true); // Mark as viewing own profile to show edit button
+		setIsModalOpen(true);
+	}, [userProfile]);
+
+	/**
+	 * Detect when user clicks view profile link from approval email
+	 *
+	 * - Watches for "?viewProfile=true" in the URL
+	 * - If user is signed in → opens "My Profile" modal immediately
+	 * - If user is NOT signed in → opens sign-in modal and set flag
+	 *
+	 * This is the entry point of the view profile flow from approval email.
+	 */
+	useEffect(() => {
+		const viewProfileParam = searchParams.get("viewProfile");
+
+		// Important: We must wait for auth to finish loading before checking if user exists.
+		// Otherwise, user might be null even if they're signed in (auth state just hasn't loaded yet).
+		if (viewProfileParam === "true" && !authLoading) {
+			// Remove the parameter to clean up the URL
+			searchParams.delete("viewProfile");
+			setSearchParams(searchParams, { replace: true });
+
+			if (user && userProfile) {
+				// User is already signed in and has a profile → open "My Profile" modal right away
+				handleOpenMyProfile();
+				// Make sure no old flags are lingering around
+				shouldOpenMyProfileAfterSignIn.current = false;
+				sessionStorage.removeItem("openMyProfileAfterSignIn");
+			} else if (user && !userProfile) {
+				// User is signed in but doesn't have a profile yet → wait for profile to load
+				// The profile will be fetched by the useEffect that watches user changes
+				// We'll handle opening the modal after profile loads in the next useEffect
+				shouldOpenMyProfileAfterSignIn.current = true;
+				sessionStorage.setItem("openMyProfileAfterSignIn", "true");
+			} else {
+				// User is NOT signed in → open sign-in modal and set flag
+				setIsSignInModalOpen(true);
+				sessionStorage.setItem("openMyProfileAfterSignIn", "true");
+				shouldOpenMyProfileAfterSignIn.current = true;
+			}
+		}
+	}, [searchParams, setSearchParams, user, authLoading, userProfile, handleOpenMyProfile]);
+
+	/**
+	 * Open "My Profile" modal after profile loads (if user came from viewProfile link)
+	 *
+	 * - Watches for when userProfile becomes available
+	 * - Checks if we have the "flag" set (remembering they came from viewProfile link)
+	 * - If yes → automatically opens "My Profile" modal
+	 */
+	useEffect(() => {
+		if (authLoading) return;
+
+		// Check if we have the "flag" set (in both the ref and sessionStorage)
+		const hasFlagInMemory = shouldOpenMyProfileAfterSignIn.current;
+		const hasFlagInStorage = sessionStorage.getItem("openMyProfileAfterSignIn") === "true";
+
+		// Only proceed if the user is signed in, has a profile, we have the flag set, and modal is not already open
+		if (
+			user &&
+			userProfile &&
+			(hasFlagInMemory || hasFlagInStorage) &&
+			!isModalOpen &&
+			!isSignInModalOpen
+		) {
+			handleOpenMyProfile();
+			// Clean up the flags - we've used them, so we don't need them anymore
+			shouldOpenMyProfileAfterSignIn.current = false;
+			sessionStorage.removeItem("openMyProfileAfterSignIn");
+		}
+	}, [user, userProfile, authLoading, isModalOpen, isSignInModalOpen, handleOpenMyProfile]);
+
+	/**
 	 * Open submission modal after user signs in (if they came from resubmit link)
 	 *
 	 * - Watches for when a user signs in (user changes from null to a user object)
@@ -175,7 +259,6 @@ const Index = () => {
 
 	/**
 	 * Clean up flag when user signs out
-
 	 *
 	 * This prevents the case where the user clicks the resubmit link (flag is set), closes the browser/app without closing the modals, and returns later, signs in normally (not from resubmit link):
 	 * Without this cleanup, the old flag might still be set and cause unexpected behavior
@@ -186,6 +269,8 @@ const Index = () => {
 			// User signed out → clean up any lingering flags
 			sessionStorage.removeItem("openResubmitAfterSignIn");
 			shouldOpenSubmissionAfterSignIn.current = false;
+			sessionStorage.removeItem("openMyProfileAfterSignIn");
+			shouldOpenMyProfileAfterSignIn.current = false;
 		}
 	}, [user]);
 
@@ -235,16 +320,6 @@ const Index = () => {
 		// Clean up resubmit flag when modal is closed manually
 		sessionStorage.removeItem("openResubmitAfterSignIn");
 		shouldOpenSubmissionAfterSignIn.current = false;
-	};
-
-	/**
-	 * Open My Profile modal - displays user's own profile
-	 * Only available to authenticated users who have an approved profile
-	 */
-	const handleOpenMyProfile = () => {
-		setSelectedWoman(userProfile!); // Safe to assert since the 'My Profile' button is only shown when profile is approved (i.e. guaranteed to exist)
-		setIsViewingOwnProfile(true); // Mark as viewing own profile to show edit button
-		setIsModalOpen(true);
 	};
 
 	/**
@@ -629,12 +704,14 @@ const Index = () => {
 
 			{/* MODALS */}
 			{/* Profile detail modal - shows full profile when a card is clicked */}
-			<ProfileModal
-				isOpen={isModalOpen}
-				onClose={handleCloseModal}
-				woman={selectedWoman}
-				onEditClick={isViewingOwnProfile ? handleOpenEditModal : undefined} // Only pass edit callback when viewing own profile
-			/>
+			{selectedWoman && (
+				<ProfileModal
+					isOpen={isModalOpen}
+					onClose={handleCloseModal}
+					woman={selectedWoman}
+					onEditClick={isViewingOwnProfile ? handleOpenEditModal : undefined} // Only pass edit callback when viewing own profile
+				/>
+			)}
 
 			{/* Profile submission modal - allows users to submit new profiles */}
 			<ProfileSubmissionModal
