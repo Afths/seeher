@@ -32,8 +32,10 @@ jobs:
       # -------------------------
       # DEBUG TOKEN LENGTH (new)
       # -------------------------
-      - name: Debug token length
+      - name: Debug token content
         run: |
+          echo "Token start: ${SUPABASE_ACCESS_TOKEN:0:8}"
+          echo "Token end: ${SUPABASE_ACCESS_TOKEN: -8}"
           echo "Token length: ${#SUPABASE_ACCESS_TOKEN}"
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
