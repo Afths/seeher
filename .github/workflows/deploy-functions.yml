@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "supabase/functions/**"   # Only run when Edge Functions change
+      - "supabase/functions/**"
       - ".github/workflows/deploy-functions.yml"
 
 jobs:
@@ -20,10 +20,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
-      - name: Install Supabase CLI
-        run: npm install -g supabase
+      - name: Install Supabase CLI (official install)
+        run: |
+          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase-linux-amd64.tar.gz -o supabase.tar.gz
+          tar -xzf supabase.tar.gz
+          sudo mv supabase /usr/local/bin/supabase
+          supabase --version
 
       - name: Deploy Edge Functions
         env:
@@ -31,10 +34,8 @@ jobs:
           SUPABASE_PROJECT_ID: knftyqkhampkqchoncel
         run: |
           echo "$SUPABASE_ACCESS_TOKEN" | supabase login --token -
-
           supabase link --project-ref $SUPABASE_PROJECT_ID
 
-          # Deploy your functions
           supabase functions deploy send-submission-email --no-verify-jwt
           supabase functions deploy send-approval-email --no-verify-jwt
           supabase functions deploy send-rejection-email --no-verify-jwt
