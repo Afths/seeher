@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import { TalentCard } from "@/components/TalentCard";
 import { SearchFilters } from "@/components/SearchFilters";
 import { ProfileModal } from "@/components/ProfileModal";
@@ -63,6 +64,7 @@ const Index = () => {
 	const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false); // Profile edit modal visibility
 	const [isSignInModalOpen, setIsSignInModalOpen] = useState<boolean>(false); // Sign in modal visibility
 	const [userProfile, setUserProfile] = useState<Woman | null>(null); // Current user's full profile data
+	const [pendingReviewCount, setPendingReviewCount] = useState<number>(0); // Count of pending reviews for admins
 
 	const hasProfile = userProfile !== null;
 	const profileStatus = (userProfile?.status as ProfileStatus) ?? null;
@@ -117,6 +119,64 @@ const Index = () => {
 	useEffect(() => {
 		fetchUserProfile();
 	}, [user]);
+
+	/**
+	 * Fetch count of pending reviews for admin users
+	 * Used to display notification badge on Admin Dashboard button
+	 */
+	const fetchPendingReviewCount = useCallback(async () => {
+		if (!isAdmin || !user) {
+			setPendingReviewCount(0);
+			return;
+		}
+
+		const { count, error } = await supabase
+			.from("women")
+			.select("*", { count: "exact", head: true })
+			.eq("status", "PENDING_APPROVAL");
+
+		if (error) {
+			console.error("[Index] ❌ Error fetching pending review count:", error);
+			setPendingReviewCount(0);
+			return;
+		}
+
+		console.log("[Index] ✅ Pending review count:", count);
+
+		setPendingReviewCount(count || 0);
+	}, [isAdmin, user]);
+
+	/**
+	 * Fetch pending review count for admin users
+	 * Updates whenever admin status or user changes
+	 * Also sets up real-time subscription to update count when reviews change
+	 */
+	useEffect(() => {
+		fetchPendingReviewCount();
+
+		// Set up real-time subscription to update count when reviews change
+		if (isAdmin && user) {
+			const channel = supabase
+				.channel("pending-reviews-count")
+				.on(
+					"postgres_changes",
+					{
+						event: "*",
+						schema: "public",
+						table: "women",
+						filter: "status=eq.PENDING_APPROVAL",
+					},
+					() => {
+						fetchPendingReviewCount();
+					}
+				)
+				.subscribe();
+
+			return () => {
+				supabase.removeChannel(channel);
+			};
+		}
+	}, [isAdmin, user, fetchPendingReviewCount]);
 
 	/**
 	 * Detect when user clicks resubmit link from email
@@ -510,14 +570,27 @@ const Index = () => {
 										)}
 										{/* Admin Dashboard button - only visible to admins */}
 										{isAdmin && (
-											<Button
-												variant="secondary"
-												size="sm"
-												className="rounded-xl"
-												onClick={() => navigate("/admin")}
-											>
-												Admin Dashboard
-											</Button>
+											<div className="relative">
+												<Button
+													variant="secondary"
+													size="sm"
+													className="rounded-xl"
+													onClick={() => navigate("/admin")}
+												>
+													Admin Dashboard
+												</Button>
+												{/* Red notification badge - shown when there are pending reviews */}
+												{pendingReviewCount > 0 && (
+													<Badge
+														variant="destructive"
+														className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 rounded-full bg-red-500 border-2 border-background"
+													>
+														{pendingReviewCount > 9
+															? "9+"
+															: pendingReviewCount}
+													</Badge>
+												)}
+											</div>
 										)}
 										{/* Sign Out button - visible when user is logged in */}
 										<Button
