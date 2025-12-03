@@ -79,6 +79,11 @@ const Index = () => {
 	// Note: We also use sessionStorage to store the flag, so it survives page refreshes.
 	const shouldOpenMyProfileAfterSignIn = useRef<boolean>(false);
 
+	// When an admin clicks the admin dashboard link in their notification email but isn't signed in yet,
+	// we set a "flag" to remember that after they sign in, we should navigate to the admin dashboard.
+	// Note: We also use sessionStorage to store the flag, so it survives page refreshes.
+	const shouldOpenAdminDashboardAfterSignIn = useRef<boolean>(false);
+
 	/**
 	 * Fetch user's profile data (if they have an approved or pending profile)
 	 * Note: Not approved profiles are not considered as "having a profile" (so users can resubmit after rejection)
@@ -331,6 +336,8 @@ const Index = () => {
 			shouldOpenSubmissionAfterSignIn.current = false;
 			sessionStorage.removeItem("openMyProfileAfterSignIn");
 			shouldOpenMyProfileAfterSignIn.current = false;
+			sessionStorage.removeItem("openAdminDashboardAfterSignIn");
+			shouldOpenAdminDashboardAfterSignIn.current = false;
 		}
 	}, [user]);
 

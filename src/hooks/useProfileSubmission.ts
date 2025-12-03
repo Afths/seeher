@@ -264,6 +264,39 @@ export function useProfileSubmission() {
 				// Don't throw - submission was successful, email is just a notification
 			}
 
+			/**
+			 * STEP 7: Send admin notification email
+			 *
+			 * Notifies all admins that a new profile submission is awaiting review.
+			 */
+			try {
+				const { error: adminEmailError } = await supabase.functions.invoke(
+					"send-admin-notification-email",
+					{
+						method: "POST",
+						body: {},
+					}
+				);
+
+				if (adminEmailError) {
+					console.error(
+						"[useProfileSubmission] ❌ Error sending admin notification email:",
+						adminEmailError
+					);
+					// Don't throw - submission was successful, email is just a notification
+				} else {
+					console.log(
+						"[useProfileSubmission] ✅ Admin notification email sent successfully"
+					);
+				}
+			} catch (adminEmailError) {
+				console.error(
+					"[useProfileSubmission] ❌ Error sending admin notification email:",
+					adminEmailError
+				);
+				// Don't throw - submission was successful, email is just a notification
+			}
+
 			// Success - profile submitted and awaiting admin approval
 			return true;
 		} catch (error) {

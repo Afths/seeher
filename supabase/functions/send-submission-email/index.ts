@@ -86,7 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
 
 		if (!loopsResponse.ok) {
 			const errorText = await loopsResponse.text();
-			
+
 			console.error("[send-submission-email] ❌ Loop.so API error:", errorText);
 
 			return new Response(

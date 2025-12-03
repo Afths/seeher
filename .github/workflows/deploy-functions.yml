@@ -51,5 +51,6 @@ jobs:
           supabase functions deploy send-submission-email --no-verify-jwt
           supabase functions deploy send-approval-email --no-verify-jwt
           supabase functions deploy send-rejection-email --no-verify-jwt
+          supabase functions deploy send-admin-notification-email --no-verify-jwt
 
           echo "✔ All Edge Functions deployed successfully!"
