@@ -43,7 +43,7 @@ const Index = () => {
 	const { user, signOut, loading: authLoading } = useAuth();
 
 	// Check if current user has admin privileges
-	const { isAdmin } = useIsAdmin();
+	const { isAdmin, loading: adminLoading } = useIsAdmin();
 
 	// Handles all search logic, filtering, and results management
 	const {
@@ -295,6 +295,68 @@ const Index = () => {
 			sessionStorage.removeItem("openMyProfileAfterSignIn");
 		}
 	}, [user, userProfile, authLoading, isModalOpen, isSignInModalOpen, handleOpenMyProfile]);
+
+	/**
+	 * Detect when admin clicks admin dashboard link from notification email
+	 *
+	 * - Watches for "?adminDashboard=true" in the URL
+	 * - If admin is signed in → navigates to admin dashboard immediately
+	 * - If admin is NOT signed in → opens sign-in modal and set flag
+	 *
+	 * This is the entry point of the admin dashboard flow from notification email.
+	 */
+	useEffect(() => {
+		const adminDashboardParam = searchParams.get("adminDashboard");
+
+		// Important: We must wait for auth AND admin status to finish loading before checking.
+		// Otherwise, user might be null or isAdmin might not be determined yet.
+		if (adminDashboardParam === "true" && !authLoading && !adminLoading) {
+			// Remove the parameter to clean up the URL
+			searchParams.delete("adminDashboard");
+			setSearchParams(searchParams, { replace: true });
+
+			if (user && isAdmin) {
+				// Admin is already signed in → navigate to admin dashboard right away
+				navigate("/admin");
+				// Make sure no old flags are lingering around
+				shouldOpenAdminDashboardAfterSignIn.current = false;
+				sessionStorage.removeItem("openAdminDashboardAfterSignIn");
+			} else {
+				// Admin is NOT signed in → open sign-in modal and set flag
+				setIsSignInModalOpen(true);
+				sessionStorage.setItem("openAdminDashboardAfterSignIn", "true");
+				shouldOpenAdminDashboardAfterSignIn.current = true;
+			}
+		}
+	}, [searchParams, setSearchParams, user, authLoading, adminLoading, isAdmin, navigate]);
+
+	/**
+	 * Navigate to admin dashboard after admin signs in (if they came from adminDashboard link)
+	 *
+	 * - Watches for when an admin signs in (user changes from null to a user object)
+	 * - Checks if we have the "flag" set (remembering they came from adminDashboard link)
+	 * - Checks if user is an admin
+	 * - If yes → automatically closes sign-in modal and navigates to admin dashboard
+	 *
+	 * This is what allows the automatic transition from the sign-in modal to the admin dashboard
+	 */
+	useEffect(() => {
+		// Wait for both auth and admin status to finish loading
+		if (authLoading || adminLoading) return;
+
+		// Check if we have the "flag" set (in both the ref and sessionStorage)
+		const hasFlagInMemory = shouldOpenAdminDashboardAfterSignIn.current;
+		const hasFlagInStorage = sessionStorage.getItem("openAdminDashboardAfterSignIn") === "true";
+
+		// Only proceed if the admin just signed in, we have the flag set, they are an admin, and sign-in modal is not open
+		if (user && isAdmin && (hasFlagInMemory || hasFlagInStorage) && !isSignInModalOpen) {
+			setIsSignInModalOpen(false); // Close sign-in modal
+			navigate("/admin"); // Navigate to admin dashboard
+			// Clean up the flags - we've used them, so we don't need them anymore
+			shouldOpenAdminDashboardAfterSignIn.current = false;
+			sessionStorage.removeItem("openAdminDashboardAfterSignIn");
+		}
+	}, [user, isAdmin, authLoading, adminLoading, isSignInModalOpen, navigate]);
 
 	/**
 	 * Open submission modal after user signs in (if they came from resubmit link)

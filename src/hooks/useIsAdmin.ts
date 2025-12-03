@@ -36,12 +36,12 @@ export function useIsAdmin() {
 
 	/**
 	 * Check admin status whenever user changes
-	 * 
+	 *
 	 * Calls Supabase RPC function `is_admin()` which:
 	 * - Checks if user exists in profiles table
 	 * - Verifies if user's role is 'admin'
 	 * - Returns boolean result securely from database
-	 * 
+	 *
 	 * Security Note:
 	 * - Database function prevents client-side role manipulation
 	 * - Uses RLS policies to ensure secure access
