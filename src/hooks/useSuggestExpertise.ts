@@ -32,7 +32,7 @@ export function useSuggestExpertise() {
 	 * Generate AI-powered expertise suggestions for profiles
 	 * 
 	 * Calls the Supabase Edge Function "suggest-expertise" which:
-	 * - Analyzes profile data (bio, job title, keywords, etc.)
+	 * - Analyzes profile data (bio, job title, etc.)
 	 * - Uses AI to suggest relevant areas of expertise
 	 * - Updates profiles with suggested expertise areas
 	 * 

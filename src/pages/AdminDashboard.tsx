@@ -414,12 +414,12 @@ export default function AdminDashboard() {
 										</div>
 									</div>
 
-									{/* Short bio section - only shown if bio exists */}
-									{submission.short_bio && (
+									{/* Bio section - only shown if bio exists */}
+									{submission.bio && (
 										<div className="mb-4">
-											<p className="text-sm font-medium mb-1">Short Bio:</p>
+											<p className="text-sm font-medium mb-1">Bio:</p>
 											<p className="text-sm text-muted-foreground">
-												{submission.short_bio}
+												{submission.bio}
 											</p>
 										</div>
 									)}

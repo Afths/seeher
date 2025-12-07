@@ -27,14 +27,11 @@ interface ProfileFormData {
 	email: string;
 	jobTitle: string;
 	companyName: string;
-	shortBio: string;
-	longBio: string;
-	nationality: string;
+	bio: string;
 	contactNumber: string;
-	altContactName: string;
+	socialMedia: string;
 	interestedIn: string[];
-	profilePictureUrl: string;
-	// Note: consent is not included - it's only set once during initial submission
+	profilePicture: string;
 }
 
 export function useProfileEdit() {
@@ -51,19 +48,16 @@ export function useProfileEdit() {
 		email: "",
 		jobTitle: "",
 		companyName: "",
-		shortBio: "",
-		longBio: "",
-		nationality: "",
+		bio: "",
 		contactNumber: "",
-		altContactName: "",
+		socialMedia: "",
 		interestedIn: [],
-		profilePictureUrl: "",
+		profilePicture: "",
 	});
 
 	const [languages, setLanguages] = useState<string[]>([]);
 	const [areasOfExpertise, setAreasOfExpertise] = useState<string[]>([]);
 	const [memberships, setMemberships] = useState<string[]>([]);
-	const [keywords, setKeywords] = useState<string[]>([]);
 
 	/**
 	 * Fetch user's own profile from database
@@ -107,13 +101,11 @@ export function useProfileEdit() {
 				email: data.email || "",
 				jobTitle: data.job_title || "",
 				companyName: data.company_name || "",
-				shortBio: data.short_bio || "",
-				longBio: data.long_bio || "",
-				nationality: data.nationality || "",
+				bio: data.bio || "",
+				socialMedia: data.social_media || "",
 				contactNumber: data.contact_number || "",
-				altContactName: data.alt_contact_name || "",
 				interestedIn: Array.isArray(data.interested_in) ? data.interested_in : [],
-				profilePictureUrl: data.profile_picture_url || "",
+				profilePicture: data.profile_picture || "",
 			});
 
 			// Pre-populate array fields
@@ -122,7 +114,6 @@ export function useProfileEdit() {
 				Array.isArray(data.areas_of_expertise) ? data.areas_of_expertise : []
 			);
 			setMemberships(Array.isArray(data.memberships) ? data.memberships : []);
-			setKeywords(Array.isArray(data.keywords) ? data.keywords : []);
 
 			return true;
 		} catch (error) {
@@ -153,7 +144,7 @@ export function useProfileEdit() {
 		setLoading(true);
 
 		try {
-			let profilePictureUrl: string | null = formData.profilePictureUrl || null;
+			let profilePictureUrl: string | null = formData.profilePicture || null;
 
 			/**
 			 * STEP 1: Handle profile picture removal or upload
@@ -194,7 +185,7 @@ export function useProfileEdit() {
 			 *
 			 * Sanitizes all text inputs to prevent XSS attacks.
 			 * Maps form data to database schema format.
-			 * Note: profile_picture_url is not in validation schema, handled separately.
+			 * Note: profile_picture is not in validation schema, handled separately.
 			 * Note: Email is not included - it's locked to authenticated user's email and set directly in the update.
 			 * Note: We don't update status, created_at, or user_id (protected fields).
 			 */
@@ -202,16 +193,11 @@ export function useProfileEdit() {
 				name: sanitizeInput(formData.name),
 				job_title: sanitizeInput(formData.jobTitle),
 				company_name: sanitizeInput(formData.companyName),
-				nationality: sanitizeInput(formData.nationality),
 				contact_number: sanitizeInput(formData.contactNumber),
-				alt_contact_name: sanitizeInput(formData.altContactName),
-				short_bio: sanitizeInput(formData.shortBio),
-				long_bio: sanitizeInput(formData.longBio),
+				bio: sanitizeInput(formData.bio),
+				social_media: sanitizeInput(formData.socialMedia),
 				areas_of_expertise: areasOfExpertise.map((item) => sanitizeInput(item)),
 				languages: languages.map((item) => sanitizeInput(item)),
-				keywords: keywords
-					.filter((item) => item.trim() !== "")
-					.map((item) => sanitizeInput(item)),
 				memberships: memberships
 					.filter((item) => item.trim() !== "")
 					.map((item) => sanitizeInput(item)),
@@ -242,18 +228,14 @@ export function useProfileEdit() {
 					email: user!.email!, // Always use authenticated user's email (guaranteed to exist for email/password auth) to ensure it matches their account.
 					job_title: validatedData.job_title,
 					company_name: validatedData.company_name ?? null,
-					short_bio: validatedData.short_bio,
-					long_bio: validatedData.long_bio ?? null,
-					nationality: validatedData.nationality,
+					bio: validatedData.bio,
 					contact_number: validatedData.contact_number ?? null,
-					alt_contact_name: validatedData.alt_contact_name ?? null,
+					social_media: validatedData.social_media ?? null,
 					interested_in: validatedData.interested_in,
-					profile_picture_url: profilePictureUrl || null,
+					profile_picture: profilePictureUrl || null,
 					languages: validatedData.languages,
 					areas_of_expertise: validatedData.areas_of_expertise,
 					memberships: validatedData.memberships,
-					keywords: validatedData.keywords,
-					// Note: consent is not updated - it's only set once during initial submission
 				})
 				.eq("id", profileId)
 				.eq("user_id", user!.id);
@@ -296,18 +278,15 @@ export function useProfileEdit() {
 			email: "",
 			jobTitle: "",
 			companyName: "",
-			shortBio: "",
-			longBio: "",
-			nationality: "",
+			bio: "",
 			contactNumber: "",
-			altContactName: "",
+			socialMedia: "",
 			interestedIn: [],
-			profilePictureUrl: "",
+			profilePicture: "",
 		});
 		setLanguages([]);
 		setAreasOfExpertise([]);
 		setMemberships([]);
-		setKeywords([]);
 		setErrors({});
 		setProfileId(null);
 	};
@@ -321,8 +300,6 @@ export function useProfileEdit() {
 		setAreasOfExpertise,
 		memberships,
 		setMemberships,
-		keywords,
-		setKeywords,
 		loading,
 		loadingProfile,
 		errors,

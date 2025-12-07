@@ -6,7 +6,7 @@
  *
  * Features:
  * - Form state management (name, email, bio, etc.)
- * - Multi-select arrays (languages, expertise, memberships, keywords)
+ * - Multi-select arrays (languages, expertise, memberships)
  * - Profile picture upload to Supabase Storage
  * - Input sanitization to prevent XSS attacks
  * - Zod schema validation
@@ -38,13 +38,11 @@ interface ProfileFormData {
 	email: string;
 	jobTitle: string;
 	companyName: string;
-	shortBio: string;
-	longBio: string;
-	nationality: string;
+	bio: string;
 	contactNumber: string;
-	altContactName: string;
+	socialMedia: string;
 	interestedIn: string[];
-	profilePictureUrl: string;
+	profilePicture: string;
 	consent: boolean;
 }
 
@@ -60,21 +58,18 @@ export function useProfileSubmission() {
 		email: "",
 		jobTitle: "",
 		companyName: "",
-		shortBio: "",
-		longBio: "",
-		nationality: "",
+		bio: "",
 		contactNumber: "",
-		altContactName: "",
+		socialMedia: "",
 		interestedIn: [],
-		profilePictureUrl: "",
+		profilePicture: "",
 		consent: false,
 	});
 
-	// Multi-select array states for languages, expertise areas, memberships, and keywords
+	// Multi-select array states for languages, expertise areas, and memberships
 	const [languages, setLanguages] = useState<string[]>([]);
 	const [areasOfExpertise, setAreasOfExpertise] = useState<string[]>([]);
 	const [memberships, setMemberships] = useState<string[]>([]);
-	const [keywords, setKeywords] = useState<string[]>([]);
 
 	/**
 	 * Prefill email with authenticated user's email
@@ -157,16 +152,11 @@ export function useProfileSubmission() {
 				email: sanitizeInput(formData.email),
 				job_title: sanitizeInput(formData.jobTitle),
 				company_name: sanitizeInput(formData.companyName),
-				nationality: sanitizeInput(formData.nationality),
 				contact_number: sanitizeInput(formData.contactNumber),
-				alt_contact_name: sanitizeInput(formData.altContactName),
-				short_bio: sanitizeInput(formData.shortBio),
-				long_bio: sanitizeInput(formData.longBio),
+				bio: sanitizeInput(formData.bio),
+				social_media: sanitizeInput(formData.socialMedia),
 				areas_of_expertise: areasOfExpertise.map((item) => sanitizeInput(item)),
 				languages: languages.map((item) => sanitizeInput(item)),
-				keywords: keywords
-					.filter((item) => item.trim() !== "")
-					.map((item) => sanitizeInput(item)),
 				memberships: memberships
 					.filter((item) => item.trim() !== "")
 					.map((item) => sanitizeInput(item)),
@@ -204,20 +194,16 @@ export function useProfileSubmission() {
 				email: validatedData.email,
 				job_title: validatedData.job_title,
 				company_name: validatedData.company_name ?? null,
-				short_bio: validatedData.short_bio,
-				long_bio: validatedData.long_bio ?? null,
-				nationality: validatedData.nationality,
+				bio: validatedData.bio,
 				contact_number: validatedData.contact_number ?? null,
-				alt_contact_name: validatedData.alt_contact_name ?? null,
+				social_media: validatedData.social_media ?? null,
 				interested_in: validatedData.interested_in,
-				profile_picture_url: profilePictureUrl || null,
+				profile_picture: profilePictureUrl || null,
 				languages: validatedData.languages,
 				areas_of_expertise: validatedData.areas_of_expertise,
 				memberships: validatedData.memberships,
-				keywords: validatedData.keywords,
-				consent: validatedData.consent,
 				status: "PENDING_APPROVAL",
-			});
+			} as any);
 
 			if (error) throw error;
 
@@ -337,19 +323,16 @@ export function useProfileSubmission() {
 			email: user.email,
 			jobTitle: "",
 			companyName: "",
-			shortBio: "",
-			longBio: "",
-			nationality: "",
+			bio: "",
 			contactNumber: "",
-			altContactName: "",
+			socialMedia: "",
 			interestedIn: [],
-			profilePictureUrl: "",
+			profilePicture: "",
 			consent: false,
 		});
 		setLanguages([]);
 		setAreasOfExpertise([]);
 		setMemberships([]);
-		setKeywords([]);
 		setErrors({});
 	};
 
@@ -362,8 +345,6 @@ export function useProfileSubmission() {
 		setAreasOfExpertise,
 		memberships,
 		setMemberships,
-		keywords,
-		setKeywords,
 		loading,
 		errors,
 		handleSubmit,

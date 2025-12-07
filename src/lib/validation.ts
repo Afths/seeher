@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LANGUAGES, MEMBERSHIPS } from "./constants";
 
 // Profile submission validation schema
 export const profileSubmissionSchema = z.object({
@@ -20,28 +21,13 @@ export const profileSubmissionSchema = z.object({
 
 	company_name: z.string().max(100, "Company name must be less than 100 characters").optional(),
 
-	nationality: z
-		.string()
-		.min(1, "Nationality is required")
-		.max(50, "Nationality must be less than 50 characters"),
-
 	contact_number: z
 		.string()
 		.regex(/^\+[1-9]\d{1,14}$/, "Phone number must be in format +[digits] (e.g., +35799123456)")
 		.optional()
 		.or(z.literal("")),
 
-	alt_contact_name: z
-		.string()
-		.max(100, "Alternative contact name must be less than 100 characters")
-		.optional(),
-
-	short_bio: z
-		.string()
-		.min(1, "Short bio is required")
-		.max(500, "Short bio must be less than 500 characters"),
-
-	long_bio: z.string().max(2000, "Long bio must be less than 2000 characters").optional(),
+	bio: z.string().min(1, "Bio is required").max(500, "Bio must be less than 500 characters"),
 
 	areas_of_expertise: z
 		.array(z.string().max(50))
@@ -49,29 +35,35 @@ export const profileSubmissionSchema = z.object({
 		.max(10, "Maximum 10 areas of expertise allowed"),
 
 	languages: z
-		.array(z.string().max(30))
+		.array(z.string())
 		.min(1, "At least one language is required")
-		.max(15, "Maximum 15 languages allowed"),
+		.max(15, "Maximum 15 languages allowed")
+		.refine((values) => values.every((val) => (LANGUAGES as readonly string[]).includes(val)), {
+			message: "All languages must be from the predefined list",
+		}),
 
-	keywords: z.array(z.string().max(30)).max(20, "Maximum 20 keywords allowed"),
-
-	memberships: z.array(z.string().max(100)).max(10, "Maximum 10 memberships allowed"),
+	memberships: z
+		.array(z.string())
+		.max(10, "Maximum 10 memberships allowed")
+		.refine(
+			(values) => values.every((val) => (MEMBERSHIPS as readonly string[]).includes(val)),
+			{ message: "All memberships must be from the predefined list" }
+		),
 
 	interested_in: z
 		.array(z.enum(["Speaker", "Panelist", "Board Member"]))
 		.min(1, "At least one role must be selected"),
 
-	social_media_links: z.record(z.string().url("Invalid URL format")).optional(),
+	social_media: z.string().url("Invalid URL format").optional(),
 
 	consent: z.boolean().refine((val) => val === true, "Consent is required"),
 });
 
 export type ProfileSubmissionData = z.infer<typeof profileSubmissionSchema>;
 
-// Profile update validation schema (same as submission, but without consent and email)
-// Consent is only set once during initial submission and cannot be changed
+// Profile update validation schema (same as submission, but without email)
 // Email is locked to authenticated user's email and cannot be changed
-export const profileUpdateSchema = profileSubmissionSchema.omit({ consent: true, email: true });
+export const profileUpdateSchema = profileSubmissionSchema.omit({ email: true });
 
 export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 

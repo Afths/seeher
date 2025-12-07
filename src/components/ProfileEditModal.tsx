@@ -27,7 +27,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/SearchableSelect";
-import { NationalitySelect } from "@/components/NationalitySelect";
 import { PhoneNumberInput } from "@/components/PhoneNumberInput";
 import { useProfileEdit } from "@/hooks/useProfileEdit";
 import { Loader2, Lock } from "lucide-react";
@@ -58,8 +57,6 @@ export function ProfileEditModal({
 		setAreasOfExpertise,
 		memberships,
 		setMemberships,
-		keywords,
-		setKeywords,
 		loading,
 		loadingProfile,
 		errors,
@@ -187,6 +184,38 @@ export function ProfileEditModal({
 							)}
 						</div>
 
+						{/* Contact Number - Optional, with country code selector */}
+						<div>
+							<PhoneNumberInput
+								id="editContactNumber"
+								value={formData.contactNumber}
+								onChange={(value) =>
+									setFormData({ ...formData, contactNumber: value })
+								}
+								error={errors.contact_number}
+							/>
+						</div>
+
+						{/* Social Media - Optional */}
+						<div>
+							<Label htmlFor="edit-socialMedia">Social Media Link</Label>
+							<Input
+								id="edit-socialMedia"
+								type="url"
+								value={formData.socialMedia}
+								onChange={(e) =>
+									setFormData({ ...formData, socialMedia: e.target.value })
+								}
+								placeholder="https://linkedin.com/in/yourprofile or https://instagram.com/yourprofile"
+								className={errors.social_media ? "border-destructive" : ""}
+							/>
+							{errors.social_media && (
+								<p className="text-sm text-destructive mt-1">
+									{errors.social_media}
+								</p>
+							)}
+						</div>
+
 						{/* Job Title - Required */}
 						<div>
 							<Label htmlFor="edit-jobTitle">Job Title *</Label>
@@ -220,10 +249,10 @@ export function ProfileEditModal({
 					<div>
 						<Label htmlFor="edit-profilePicture">Profile Picture</Label>
 						<div className="mt-1 space-y-2">
-							{formData.profilePictureUrl && !removePicture && (
+							{formData.profilePicture && !removePicture && (
 								<div className="flex items-center gap-2 mb-2">
 									<img
-										src={formData.profilePictureUrl}
+										src={formData.profilePicture}
 										alt="Current profile picture"
 										className="w-16 h-16 rounded-full object-cover border border-border"
 									/>
@@ -271,7 +300,7 @@ export function ProfileEditModal({
 									Picture will be removed when you save.
 								</p>
 							)}
-							{formData.profilePictureUrl && !profilePicture && !removePicture && (
+							{formData.profilePicture && !profilePicture && !removePicture && (
 								<p className="text-sm text-muted-foreground mt-1">
 									Current picture will be kept. Upload a new file to replace it.
 								</p>
@@ -280,57 +309,22 @@ export function ProfileEditModal({
 					</div>
 
 					{/* Biography Section */}
-					{/* Short Bio - Required */}
+					{/* Bio - Required */}
 					<div>
-						<Label htmlFor="edit-shortBio">Short Bio *</Label>
+						<Label htmlFor="edit-bio">Bio *</Label>
 						<Textarea
-							id="edit-shortBio"
-							value={formData.shortBio}
-							onChange={(e) => setFormData({ ...formData, shortBio: e.target.value })}
+							id="edit-bio"
+							value={formData.bio}
+							onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
 							placeholder="Brief description about yourself..."
 							required
-						/>
-					</div>
-
-					{/* Detailed Bio - Optional */}
-					<div>
-						<Label htmlFor="edit-longBio">Detailed Bio</Label>
-						<Textarea
-							id="edit-longBio"
-							value={formData.longBio}
-							onChange={(e) =>
-								setFormData({
-									...formData,
-									longBio: e.target.value,
-								})
-							}
-							placeholder="Detailed description about your background and experience..."
-							rows={4}
-						/>
-					</div>
-
-					{/* Nationality and Contact Section */}
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{/* Nationality - Required, uses standardized country list */}
-						<NationalitySelect
-							value={formData.nationality}
-							onChange={(value) => setFormData({ ...formData, nationality: value })}
-							error={errors.nationality}
-						/>
-
-						{/* Contact Number - Optional, with country code selector */}
-						<PhoneNumberInput
-							id="editContactNumber"
-							value={formData.contactNumber}
-							onChange={(value) => setFormData({ ...formData, contactNumber: value })}
-							error={errors.contact_number}
 						/>
 					</div>
 
 					{/* Languages - Required, multi-select */}
 					<SearchableSelect
 						label="Languages *"
-						placeholder="Search or add languages..."
+						placeholder="Search languages..."
 						selectedItems={languages}
 						onItemsChange={setLanguages}
 						variant="secondary"
@@ -350,21 +344,11 @@ export function ProfileEditModal({
 					{/* Memberships - Optional, multi-select */}
 					<SearchableSelect
 						label="Memberships"
-						placeholder="Search or add memberships..."
+						placeholder="Search memberships..."
 						selectedItems={memberships}
 						onItemsChange={setMemberships}
 						variant="outline"
 						field="memberships"
-					/>
-
-					{/* Keywords - Optional, multi-select */}
-					<SearchableSelect
-						label="Keywords"
-						placeholder="Search or add keywords..."
-						selectedItems={keywords}
-						onItemsChange={setKeywords}
-						variant="outline"
-						field="keywords"
 					/>
 
 					{/* Interest Types - Required, checkboxes */}

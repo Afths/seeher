@@ -9,7 +9,6 @@
  * - Name, job title, and company
  * - Short bio (truncated to 3 lines)
  * - Areas of expertise badges (shows first 3, then "+X more")
- * - Keywords badges (shows first 4, then "+X more")
  * - Languages display (shows first 3)
  * - LinkedIn link (if available)
  * - Hover effects for better interactivity
@@ -19,16 +18,15 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Linkedin } from "lucide-react";
+import { Linkedin, Instagram, Facebook, Globe } from "lucide-react";
 
 interface TalentCardProps {
 	name: string;
 	companyName: string | null;
 	jobTitle: string | null;
-	shortBio: string | null;
-	profilePictureUrl: string | null;
-	keywords?: string[];
-	socialMediaLinks?: any;
+	bio: string | null;
+	profilePicture: string | null;
+	socialMedia?: string | null;
 	languages?: string[];
 	areasOfExpertise?: string[];
 	onClick: () => void;
@@ -38,10 +36,9 @@ export function TalentCard({
 	name,
 	companyName,
 	jobTitle,
-	shortBio,
-	profilePictureUrl,
-	keywords = [],
-	socialMediaLinks,
+	bio,
+	profilePicture,
+	socialMedia,
 	languages = [],
 	areasOfExpertise = [],
 	onClick,
@@ -94,7 +91,17 @@ export function TalentCard({
 		return baseColor.replace("hsl(", "hsla(").replace(")", ", 0.3)");
 	};
 
-	const socialLinks = socialMediaLinks || {};
+	/**
+	 * Determine which social media icon to display based on URL
+	 * Supports: LinkedIn, Facebook, Instagram, and generic Globe for others
+	 */
+	const getSocialIcon = (url: string) => {
+		const urlLower = url.toLowerCase();
+		if (urlLower.includes("linkedin")) return <Linkedin className="w-5 h-5" />;
+		if (urlLower.includes("facebook")) return <Facebook className="w-5 h-5" />;
+		if (urlLower.includes("instagram")) return <Instagram className="w-5 h-5" />;
+		return <Globe className="w-5 h-5" />;
+	};
 
 	return (
 		<Card
@@ -106,11 +113,7 @@ export function TalentCard({
 					{/* Profile picture section - 40x40 avatar */}
 					<div className="w-40 h-40 flex-shrink-0">
 						<Avatar className="w-full h-full border-2 border-border/20">
-							<AvatarImage
-								src={profilePictureUrl}
-								alt={name}
-								className="object-cover"
-							/>
+							<AvatarImage src={profilePicture} alt={name} className="object-cover" />
 							{/* Fallback avatar with initials and pastel color */}
 							<AvatarFallback
 								className="text-2xl font-medium text-foreground"
@@ -123,20 +126,21 @@ export function TalentCard({
 
 					{/* Main content section */}
 					<div className="flex-1 min-w-0">
-						{/* Name and LinkedIn link */}
+						{/* Name and social media link */}
 						<div className="flex items-start justify-between mb-1">
 							<h3 className="text-lg font-semibold text-foreground">
 								{formatName(name)}
 							</h3>
-							{/* LinkedIn icon - only shown if LinkedIn URL exists */}
-							{socialLinks.raw && socialLinks.raw.includes("linkedin.com") && (
+							{/* Social media icon - dynamically determined by URL */}
+							{socialMedia && (
 								<a
-									href={socialLinks.raw}
+									href={socialMedia}
 									target="_blank"
 									rel="noopener noreferrer"
 									className="text-muted-foreground hover:text-primary hover:scale-110 transition-all duration-300 ease-out ml-2"
+									onClick={(e) => e.stopPropagation()} // Prevent card click when clicking social link
 								>
-									<Linkedin className="w-5 h-5 hover:fill-current" />
+									{getSocialIcon(socialMedia)}
 								</a>
 							)}
 						</div>
@@ -170,31 +174,9 @@ export function TalentCard({
 							</div>
 						)}
 
-						{/* Short bio - truncated to 3 lines */}
-						{shortBio && (
-							<p className="text-sm text-foreground/80 mb-3 line-clamp-3">
-								{shortBio}
-							</p>
-						)}
-
-						{/* Keywords badges - shows first 4, then "+X more" */}
-						{keywords.length > 0 && (
-							<div className="flex flex-wrap gap-1 mb-3">
-								{keywords.slice(0, 4).map((keyword, index) => (
-									<Badge
-										key={index}
-										variant="outline"
-										className="text-xs rounded-full"
-									>
-										{keyword}
-									</Badge>
-								))}
-								{keywords.length > 4 && (
-									<Badge variant="outline" className="text-xs rounded-full">
-										+{keywords.length - 4}
-									</Badge>
-								)}
-							</div>
+						{/* Bio - truncated to 3 lines */}
+						{bio && (
+							<p className="text-sm text-foreground/80 mb-3 line-clamp-3">{bio}</p>
 						)}
 
 						{/* Languages display - shows first 3 */}

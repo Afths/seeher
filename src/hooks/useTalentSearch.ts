@@ -3,7 +3,7 @@
  * It handles:
  * - Fetching profiles from the database
  * - Filtering by interest type (speaker, panelist, board member)
- * - Text search across multiple fields (name, bio, expertise, keywords)
+ * - Text search across multiple fields (name, bio, expertise)
  * - Filtering by languages, areas of expertise, and memberships
  * - Loading filter options dynamically from the database
  * - Sorting results by profile completeness
@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { WomanPublic } from "@/types/database";
 import { searchFiltersSchema, sanitizeInput } from "@/lib/validation";
 import { useAuth } from "@/contexts/AuthContext";
+import { LANGUAGES, MEMBERSHIPS } from "@/lib/constants";
 
 /**
  * Defines all the filter criteria users can apply to their search
@@ -54,48 +55,37 @@ export function useTalentSearch() {
 	});
 
 	/**
-	 * Load filter options from database
+	 * Load filter options
 	 *
-	 * Fetches all unique languages, expertise areas, and memberships from approved profiles to populate the filter dropdowns.
-	 * This runs once when the component mounts, since the filter options do not change.
-	 *
-	 * Note: We use a query to determine the filter options, since a new record with a new/different filter value might be inserted and in that way the filter options would include the new value.
+	 * Languages and memberships use predefined lists.
+	 * Areas of expertise are fetched from approved profiles in the database.
 	 */
 	useEffect(() => {
-		const loadFilterOptions = async () => {
-			// Fetch only approved profiles to build filter options
-			// Note: This requires admin-level access or a public view
+		// Set predefined lists for languages and memberships
+		setAllLanguages([...LANGUAGES]);
+		setAllMemberships([...MEMBERSHIPS]);
+
+		// Fetch areas of expertise from database
+		const loadExpertiseOptions = async () => {
 			const { data, error } = await supabase
 				.from("women")
-				.select("languages, areas_of_expertise, memberships")
+				.select("areas_of_expertise")
 				.eq("status", "APPROVED");
 
-			if (!data) {
-				console.error("[useTalentSearch] ❌ Error fetching filter options:", error);
+			if (error) {
+				console.error("[useTalentSearch] ❌ Error fetching expertise options:", error);
 				return;
 			}
 
-			console.log("[useTalentSearch] ✅ Filter options fetched successfully", data);
-
-			// Use Sets to automatically deduplicate values
-			const languages = new Set<string>();
 			const areas = new Set<string>();
-			const memberships = new Set<string>();
-
-			// Extract all unique values from each profile
 			data.forEach((item) => {
-				item.languages?.forEach((lang) => languages.add(lang));
 				item.areas_of_expertise?.forEach((area) => areas.add(area));
-				item.memberships?.forEach((membership) => memberships.add(membership));
 			});
 
-			// Convert Sets to sorted arrays for display
-			setAllLanguages(Array.from(languages).sort());
 			setAllAreasOfExpertise(Array.from(areas).sort());
-			setAllMemberships(Array.from(memberships).sort());
 		};
 
-		loadFilterOptions();
+		loadExpertiseOptions();
 	}, []);
 
 	/**
@@ -130,11 +120,11 @@ export function useTalentSearch() {
 			const validatedFilters = validationResult.success ? validationResult.data : filters;
 
 			// Query the women table for approved profiles
-			// We exclude sensitive fields (email, contact_number, alt_contact_name)
+			// We exclude sensitive fields (email, contact_number)
 			let query = supabase
 				.from("women")
 				.select(
-					"id, name, job_title, company_name, nationality, short_bio, long_bio, profile_picture_url, areas_of_expertise, languages, keywords, memberships, interested_in, created_at, social_media_links, status, user_id"
+					"id, name, job_title, company_name, bio, profile_picture, areas_of_expertise, languages, memberships, interested_in, created_at, social_media, status, user_id"
 				)
 				.eq("status", "APPROVED");
 
@@ -186,7 +176,7 @@ export function useTalentSearch() {
 
 			/**
 			 * TEXT SEARCH
-			 * Search across multiple fields: bio, job title, name, company, keywords, expertise, memberships
+			 * Search across multiple fields: bio, job title, name, company, expertise, memberships
 			 * Uses case-insensitive matching
 			 */
 			if (validatedFilters.searchTerm?.trim()) {
@@ -194,17 +184,10 @@ export function useTalentSearch() {
 				filteredResults = filteredResults.filter((item) => {
 					// Search in text fields
 					const matchesText =
-						item.long_bio?.toLowerCase().includes(searchTerm) ||
-						item.short_bio?.toLowerCase().includes(searchTerm) ||
+						item.bio?.toLowerCase().includes(searchTerm) ||
 						item.job_title?.toLowerCase().includes(searchTerm) ||
 						item.name?.toLowerCase().includes(searchTerm) ||
 						item.company_name?.toLowerCase().includes(searchTerm);
-
-					// Search in keywords array
-					const matchesKeywords =
-						item.keywords?.some((keyword) =>
-							keyword.toLowerCase().includes(searchTerm)
-						) || false;
 
 					// Search in areas of expertise array
 					const matchesAreas =
@@ -219,7 +202,7 @@ export function useTalentSearch() {
 						) || false;
 
 					// Return true if search term matches any field
-					return matchesText || matchesKeywords || matchesAreas || matchesMemberships;
+					return matchesText || matchesAreas || matchesMemberships;
 				});
 			}
 
@@ -237,13 +220,10 @@ export function useTalentSearch() {
 							"name",
 							"job_title",
 							"company_name",
-							"nationality",
-							"short_bio",
-							"long_bio",
-							"profile_picture_url",
+							"bio",
+							"profile_picture",
 							"areas_of_expertise",
 							"languages",
-							"keywords",
 							"memberships",
 						];
 

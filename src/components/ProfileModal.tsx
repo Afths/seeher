@@ -3,12 +3,12 @@
  *
  * Displays a detailed view of a woman professional's profile in a modal dialog.
  * Shows comprehensive information including:
- * - Profile picture and basic info (job title, company, nationality, interests)
+ * - Profile picture and basic info (job title, company, interests)
  * - Areas of expertise (with endorsement functionality) and languages
- * - Contact information (email, phone, alternative contact)
+ * - Contact information (email, phone)
  * - Social media links with platform-specific icons
  * - Biography (short and detailed)
- * - Keywords and memberships
+ * - Memberships
  *
  * Features:
  * - Responsive layout (1 column on mobile, 3 columns on desktop)
@@ -24,16 +24,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-	Linkedin,
-	Twitter,
-	Facebook,
-	Instagram,
-	Youtube,
-	Globe,
-	Edit,
-	ThumbsUp,
-} from "lucide-react";
+import { Linkedin, Facebook, Instagram, Globe, Edit, ThumbsUp } from "lucide-react";
 import { Woman } from "@/types/database";
 import { useEndorsements } from "@/hooks/useEndorsements";
 import { useAuth } from "@/contexts/AuthContext";
@@ -55,23 +46,20 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 		toggleEndorsement,
 	} = useEndorsements(woman.id, user?.id);
 
-	const socialLinks = woman.social_media_links as Record<string, string> | null;
+	const socialMediaLink = woman.social_media;
 
 	// If 'onEditClick' is provided, it means user is viewing their own profile and therefore they can edit it
 	const showEditButton = !!onEditClick;
 
 	/**
 	 * Determine which social media icon to display based on URL
-	 * Supports: LinkedIn, Twitter/X, Facebook, Instagram, YouTube, and generic Globe
+	 * Supports: LinkedIn, Facebook, Instagram, and generic Globe for all other links
 	 */
 	const getSocialIcon = (url: string) => {
 		const urlLower = url.toLowerCase();
 		if (urlLower.includes("linkedin")) return <Linkedin className="w-3 h-3" />;
-		if (urlLower.includes("twitter") || urlLower.includes("x.com"))
-			return <Twitter className="w-3 h-3" />;
 		if (urlLower.includes("facebook")) return <Facebook className="w-3 h-3" />;
 		if (urlLower.includes("instagram")) return <Instagram className="w-3 h-3" />;
-		if (urlLower.includes("youtube")) return <Youtube className="w-3 h-3" />;
 		return <Globe className="w-3 h-3" />;
 	};
 
@@ -103,7 +91,7 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 						{/* Profile picture with fallback initials */}
 						<Avatar className="w-32 h-32 mx-auto">
 							<AvatarImage
-								src={woman.profile_picture_url || undefined}
+								src={woman.profile_picture || undefined}
 								className="object-cover w-full h-full"
 							/>
 							<AvatarFallback className="text-2xl">
@@ -133,15 +121,6 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 											COMPANY
 										</h4>
 										<p className="text-sm">{woman.company_name}</p>
-									</div>
-								)}
-
-								{woman.nationality && (
-									<div>
-										<h4 className="text-sm font-medium text-primary">
-											NATIONALITY
-										</h4>
-										<p className="text-sm">{woman.nationality}</p>
 									</div>
 								)}
 
@@ -243,10 +222,7 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 						)}
 
 						{/* Contact Information card */}
-						{(woman.email ||
-							woman.contact_number ||
-							woman.alt_contact_name ||
-							socialLinks) && (
+						{(woman.email || woman.contact_number || socialMediaLink) && (
 							<Card className="border-primary/30">
 								<CardContent className="pt-4 space-y-3">
 									<h4 className="text-sm font-medium text-primary">
@@ -270,39 +246,25 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 												<p className="text-xs">{woman.contact_number}</p>
 											</div>
 										)}
-
-										{woman.alt_contact_name && (
-											<div>
-												<h5 className="text-xs font-medium text-muted-foreground">
-													ALTERNATIVE CONTACT
-												</h5>
-												<p className="text-xs">{woman.alt_contact_name}</p>
-											</div>
-										)}
 									</div>
 
-									{/* Social media links with platform-specific icons */}
-									{socialLinks && Object.keys(socialLinks).length > 0 && (
+									{/* Social media link with platform-specific icon */}
+									{socialMediaLink && (
 										<div>
 											<h5 className="text-xs font-medium text-muted-foreground mb-2">
 												SOCIAL MEDIA
 											</h5>
 											<div className="flex flex-wrap gap-1">
-												{Object.entries(socialLinks).map(
-													([platform, url]) => (
-														<Button
-															key={platform}
-															variant="outline"
-															size="sm"
-															onClick={() =>
-																window.open(url, "_blank")
-															}
-															className="text-xs h-6 px-2 hover:scale-105 transition-transform duration-200"
-														>
-															{getSocialIcon(url)}
-														</Button>
-													)
-												)}
+												<Button
+													variant="outline"
+													size="sm"
+													onClick={() =>
+														window.open(socialMediaLink, "_blank")
+													}
+													className="text-xs h-6 px-2 hover:scale-105 transition-transform duration-200"
+												>
+													{getSocialIcon(socialMediaLink)}
+												</Button>
 											</div>
 										</div>
 									)}
@@ -314,53 +276,20 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 					{/* RIGHT COLUMNS - Detailed Information */}
 					<div className="md:col-span-2 space-y-6">
 						{/* Biography section */}
-						{(woman.short_bio || woman.long_bio) && (
+						{woman.bio && (
 							<div>
 								<h3 className="text-lg font-semibold mb-3">BIOGRAPHY</h3>
-								{woman.short_bio && (
-									<div className="mb-3">
-										<h4 className="text-sm font-medium text-primary mb-1">
-											SHORT BIO
-										</h4>
-										<p className="text-sm">{woman.short_bio}</p>
-									</div>
-								)}
-								{woman.long_bio && (
-									<div>
-										<h4 className="text-sm font-medium text-primary mb-1">
-											DETAILED BIO
-										</h4>
-										<p className="text-sm whitespace-pre-wrap">
-											{woman.long_bio}
-										</p>
-									</div>
-								)}
+								<div>
+									<h4 className="text-sm font-medium text-primary mb-1">BIO</h4>
+									<p className="text-sm">{woman.bio}</p>
+								</div>
 							</div>
 						)}
 
 						<Separator />
 
-						{/* Keywords and Memberships grid */}
+						{/* Memberships grid */}
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-							{woman.keywords && woman.keywords.length > 0 && (
-								<div>
-									<h4 className="text-sm font-medium text-primary mb-2">
-										KEYWORDS
-									</h4>
-									<div className="flex flex-wrap gap-1">
-										{woman.keywords.map((keyword) => (
-											<Badge
-												key={keyword}
-												variant="secondary"
-												className="text-xs"
-											>
-												{keyword}
-											</Badge>
-										))}
-									</div>
-								</div>
-							)}
-
 							{woman.memberships && woman.memberships.length > 0 && (
 								<div>
 									<h4 className="text-sm font-medium text-primary mb-2">

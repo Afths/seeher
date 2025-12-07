@@ -6,8 +6,8 @@
  * - Basic info (name, email, job title, company)
  * - Profile picture upload
  * - Biography (short and detailed)
- * - Nationality and contact information
- * - Languages, areas of expertise, keywords
+ * - Contact information
+ * - Languages, areas of expertise, memberships
  * - Interest types (speaker, panelist, board member)
  * - Privacy consent checkbox
  *
@@ -29,7 +29,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/SearchableSelect";
-import { NationalitySelect } from "@/components/NationalitySelect";
 import { PhoneNumberInput } from "@/components/PhoneNumberInput";
 import { SuccessModal } from "@/components/SuccessModal";
 import { useProfileSubmission } from "@/hooks/useProfileSubmission";
@@ -61,8 +60,6 @@ export function ProfileSubmissionModal({
 		setAreasOfExpertise,
 		memberships,
 		setMemberships,
-		keywords,
-		setKeywords,
 		loading,
 		errors,
 		handleSubmit,
@@ -153,6 +150,38 @@ export function ProfileSubmissionModal({
 							)}
 						</div>
 
+						{/* Contact Number - Optional, with country code selector */}
+						<div>
+							<PhoneNumberInput
+								id="submitContactNumber"
+								value={formData.contactNumber}
+								onChange={(value) =>
+									setFormData({ ...formData, contactNumber: value })
+								}
+								error={errors.contact_number}
+							/>
+						</div>
+
+						{/* Social Media - Optional */}
+						<div>
+							<Label htmlFor="socialMedia">Social Media Link</Label>
+							<Input
+								id="socialMedia"
+								type="url"
+								value={formData.socialMedia}
+								onChange={(e) =>
+									setFormData({ ...formData, socialMedia: e.target.value })
+								}
+								placeholder="https://linkedin.com/in/yourprofile"
+								className={errors.social_media ? "border-destructive" : ""}
+							/>
+							{errors.social_media && (
+								<p className="text-sm text-destructive mt-1">
+									{errors.social_media}
+								</p>
+							)}
+						</div>
+
 						{/* Job Title - Required */}
 						<div>
 							<Label htmlFor="jobTitle">Job Title *</Label>
@@ -202,51 +231,22 @@ export function ProfileSubmissionModal({
 					</div>
 
 					{/* Biography Section */}
-					{/* Short Bio - Required */}
+					{/* Bio - Required */}
 					<div>
-						<Label htmlFor="shortBio">Short Bio *</Label>
+						<Label htmlFor="bio">Bio *</Label>
 						<Textarea
-							id="shortBio"
-							value={formData.shortBio}
-							onChange={(e) => setFormData({ ...formData, shortBio: e.target.value })}
+							id="bio"
+							value={formData.bio}
+							onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
 							placeholder="Brief description about yourself..."
 							required
-						/>
-					</div>
-
-					{/* Detailed Bio - Optional */}
-					<div>
-						<Label htmlFor="longBio">Detailed Bio</Label>
-						<Textarea
-							id="longBio"
-							value={formData.longBio}
-							onChange={(e) => setFormData({ ...formData, longBio: e.target.value })}
-							placeholder="Detailed description about your background and experience..."
-							rows={4}
-						/>
-					</div>
-
-					{/* Nationality and Contact Section */}
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{/* Nationality - Required, uses standardized country list */}
-						<NationalitySelect
-							value={formData.nationality}
-							onChange={(value) => setFormData({ ...formData, nationality: value })}
-							error={errors.nationality}
-						/>
-						{/* Contact Number - Optional, with country code selector */}
-						<PhoneNumberInput
-							id="submitContactNumber"
-							value={formData.contactNumber}
-							onChange={(value) => setFormData({ ...formData, contactNumber: value })}
-							error={errors.contact_number}
 						/>
 					</div>
 
 					{/* Languages - Required, multi-select */}
 					<SearchableSelect
 						label="Languages *"
-						placeholder="Search or add languages..."
+						placeholder="Search languages..."
 						selectedItems={languages}
 						onItemsChange={setLanguages}
 						variant="secondary"
@@ -266,21 +266,11 @@ export function ProfileSubmissionModal({
 					{/* Memberships - Optional, multi-select */}
 					<SearchableSelect
 						label="Memberships"
-						placeholder="Search or add memberships..."
+						placeholder="Search memberships..."
 						selectedItems={memberships}
 						onItemsChange={setMemberships}
 						variant="outline"
 						field="memberships"
-					/>
-
-					{/* Keywords - Optional, multi-select */}
-					<SearchableSelect
-						label="Keywords"
-						placeholder="Search or add keywords..."
-						selectedItems={keywords}
-						onItemsChange={setKeywords}
-						variant="outline"
-						field="keywords"
 					/>
 
 					{/* Interest Types - Required, checkboxes */}

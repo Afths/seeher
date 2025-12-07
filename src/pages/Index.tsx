@@ -2,7 +2,7 @@
  * INDEX PAGE - Main Search & Discovery Page
  *
  * This is the primary page where users can:
- * - Search for women professionals by name, bio, expertise, keywords
+ * - Search for women professionals by name, bio, expertise
  * - Filter by interest type (Speaker, Panelist, Board Member)
  * - Filter by languages, areas of expertise, and memberships
  * - View profile cards and click to see detailed profiles
@@ -732,7 +732,7 @@ const Index = () => {
 							<div className="flex-1 relative">
 								{/* Search input with icon */}
 								<Input
-									placeholder="Search by name, bio, expertise, keywords..."
+									placeholder="Search by name, bio, expertise..."
 									value={searchInput}
 									onChange={(e) => setSearchInput(e.target.value)}
 									onKeyPress={handleKeyPress}
@@ -820,10 +820,9 @@ const Index = () => {
 										name={person.name}
 										companyName={person.company_name}
 										jobTitle={person.job_title}
-										shortBio={person.short_bio}
-										profilePictureUrl={person.profile_picture_url}
-										keywords={person.keywords || []}
-										socialMediaLinks={person.social_media_links}
+										bio={person.bio}
+										profilePicture={person.profile_picture}
+										socialMedia={person.social_media}
 										languages={person.languages || []}
 										areasOfExpertise={person.areas_of_expertise || []}
 										onClick={() => handleCardClick(person)}
