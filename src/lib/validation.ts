@@ -55,8 +55,6 @@ export const profileSubmissionSchema = z.object({
 		.min(1, "At least one role must be selected"),
 
 	social_media: z.string().url("Invalid URL format").optional(),
-
-	consent: z.boolean().refine((val) => val === true, "Consent is required"),
 });
 
 export type ProfileSubmissionData = z.infer<typeof profileSubmissionSchema>;

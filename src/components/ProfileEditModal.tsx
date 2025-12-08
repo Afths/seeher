@@ -206,7 +206,7 @@ export function ProfileEditModal({
 								onChange={(e) =>
 									setFormData({ ...formData, socialMedia: e.target.value })
 								}
-								placeholder="https://linkedin.com/in/yourprofile or https://instagram.com/yourprofile"
+								placeholder="https://linkedin.com/in/yourprofile"
 								className={errors.social_media ? "border-destructive" : ""}
 							/>
 							{errors.social_media && (
@@ -226,7 +226,11 @@ export function ProfileEditModal({
 									setFormData({ ...formData, jobTitle: e.target.value })
 								}
 								required
+								className={errors.job_title ? "border-destructive" : ""}
 							/>
+							{errors.job_title && (
+								<p className="text-sm text-destructive mt-1">{errors.job_title}</p>
+							)}
 						</div>
 
 						{/* Company Name - Optional */}
@@ -241,7 +245,13 @@ export function ProfileEditModal({
 										companyName: e.target.value,
 									})
 								}
+								className={errors.company_name ? "border-destructive" : ""}
 							/>
+							{errors.company_name && (
+								<p className="text-sm text-destructive mt-1">
+									{errors.company_name}
+								</p>
+							)}
 						</div>
 					</div>
 
@@ -318,7 +328,11 @@ export function ProfileEditModal({
 							onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
 							placeholder="Brief description about yourself..."
 							required
+							className={errors.bio ? "border-destructive" : ""}
 						/>
+						{errors.bio && (
+							<p className="text-sm text-destructive mt-1">{errors.bio}</p>
+						)}
 					</div>
 
 					{/* Languages - Required, multi-select */}
@@ -329,6 +343,7 @@ export function ProfileEditModal({
 						onItemsChange={setLanguages}
 						variant="secondary"
 						field="languages"
+						error={errors.languages}
 					/>
 
 					{/* Areas of Expertise - Required, multi-select */}
@@ -339,6 +354,7 @@ export function ProfileEditModal({
 						onItemsChange={setAreasOfExpertise}
 						variant="secondary"
 						field="areas_of_expertise"
+						error={errors.areas_of_expertise}
 					/>
 
 					{/* Memberships - Optional, multi-select */}
@@ -349,6 +365,7 @@ export function ProfileEditModal({
 						onItemsChange={setMemberships}
 						variant="outline"
 						field="memberships"
+						error={errors.memberships}
 					/>
 
 					{/* Interest Types - Required, checkboxes */}

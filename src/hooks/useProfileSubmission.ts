@@ -43,7 +43,7 @@ interface ProfileFormData {
 	socialMedia: string;
 	interestedIn: string[];
 	profilePicture: string;
-	consent: boolean;
+	consent: boolean; // Frontend validation only, not stored in database
 }
 
 export function useProfileSubmission() {
@@ -111,6 +111,12 @@ export function useProfileSubmission() {
 			return;
 		}
 
+		// Frontend validation: Check consent (not in Zod schema since it's not stored in database)
+		if (!formData.consent) {
+			setErrors({ consent: "You must agree to the Privacy Policy and Terms & Conditions" });
+			return;
+		}
+
 		setLoading(true);
 		try {
 			let profilePictureUrl = "";
@@ -161,7 +167,6 @@ export function useProfileSubmission() {
 					.filter((item) => item.trim() !== "")
 					.map((item) => sanitizeInput(item)),
 				interested_in: formData.interestedIn,
-				consent: formData.consent,
 			};
 
 			/**

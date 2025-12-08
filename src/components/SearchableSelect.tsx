@@ -35,6 +35,7 @@ interface SearchableSelectProps {
 	onItemsChange: (items: string[]) => void;
 	variant?: "secondary" | "outline";
 	field: "languages" | "areas_of_expertise" | "memberships";
+	error?: string;
 }
 
 export function SearchableSelect({
@@ -44,6 +45,7 @@ export function SearchableSelect({
 	onItemsChange,
 	variant = "secondary",
 	field,
+	error,
 }: SearchableSelectProps) {
 	// Search input state
 	const [searchTerm, setSearchTerm] = useState("");
@@ -225,7 +227,7 @@ export function SearchableSelect({
 						onKeyDown={handleKeyDown}
 						onFocus={() => setIsOpen(true)}
 						placeholder={placeholder}
-						className="pr-10"
+						className={`pr-10 ${error ? "border-destructive" : ""}`}
 					/>
 					{/* Dropdown toggle button */}
 					<Button
@@ -293,6 +295,8 @@ export function SearchableSelect({
 					</Badge>
 				))}
 			</div>
+			{/* Error message */}
+			{error && <p className="text-sm text-destructive mt-1">{error}</p>}
 		</div>
 	);
 }
