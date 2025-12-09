@@ -700,25 +700,25 @@ const Index = () => {
 							<TabsList className="bg-card/50 backdrop-blur-sm border border-primary/30 rounded-xl p-1">
 								<TabsTrigger
 									value="all"
-									className="rounded-lg text-sm font-medium uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+									className="rounded-xl text-sm font-medium uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 								>
 									ALL
 								</TabsTrigger>
 								<TabsTrigger
 									value="Speaker"
-									className="rounded-lg text-sm font-medium uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+									className="rounded-xl text-sm font-medium uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 								>
 									SPEAKER
 								</TabsTrigger>
 								<TabsTrigger
 									value="Panelist"
-									className="rounded-lg text-sm font-medium uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+									className="rounded-xl text-sm font-medium uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 								>
 									PANELIST
 								</TabsTrigger>
 								<TabsTrigger
 									value="Board Member"
-									className="rounded-lg text-sm font-medium uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+									className="rounded-xl text-sm font-medium uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 								>
 									BOARD MEMBER
 								</TabsTrigger>

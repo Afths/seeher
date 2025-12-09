@@ -123,17 +123,30 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 										<p className="text-sm">{woman.company_name}</p>
 									</div>
 								)}
-
-								{woman.interested_in && (
-									<div>
-										<h4 className="text-sm font-medium text-primary">
-											INTERESTED IN
-										</h4>
-										<p className="text-sm">{woman.interested_in.join(", ")}</p>
-									</div>
-								)}
 							</CardContent>
 						</Card>
+
+						{/* Interested In card */}
+						{woman.interested_in && woman.interested_in.length > 0 && (
+							<Card className="border-primary/30">
+								<CardContent className="pt-4">
+									<h4 className="text-sm font-medium text-primary mb-2">
+										INTERESTED IN
+									</h4>
+									<div className="flex flex-wrap gap-1">
+										{woman.interested_in.map((interest) => (
+											<Badge
+												key={interest}
+												variant="secondary"
+												className="text-xs bg-primary/10 text-primary border-primary/30"
+											>
+												{interest}
+											</Badge>
+										))}
+									</div>
+								</CardContent>
+							</Card>
+						)}
 
 						{/* Areas of Expertise card */}
 						{woman.areas_of_expertise && woman.areas_of_expertise.length > 0 && (
@@ -229,14 +242,19 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 										CONTACT INFORMATION
 									</h4>
 									<div className="space-y-2">
-										{woman.email && (
-											<div>
-												<h5 className="text-xs font-medium text-primary">
-													EMAIL
-												</h5>
-												<p className="text-xs">{woman.email}</p>
-											</div>
-										)}
+									{woman.email && (
+										<div>
+											<h5 className="text-xs font-medium text-primary">
+												EMAIL
+											</h5>
+											<a
+												href={`mailto:${woman.email}`}
+												className="text-xs text-primary hover:underline"
+											>
+												{woman.email}
+											</a>
+										</div>
+									)}
 
 										{woman.contact_number && (
 											<div>
@@ -251,7 +269,7 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 									{/* Social media link with platform-specific icon */}
 									{socialMediaLink && (
 										<div>
-											<h5 className="text-xs font-medium text-muted-foreground mb-2">
+											<h5 className="text-xs font-medium text-primary mb-2">
 												SOCIAL MEDIA
 											</h5>
 											<div className="flex flex-wrap gap-1">
@@ -278,20 +296,17 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 						{/* Biography section */}
 						{woman.bio && (
 							<div>
-								<h3 className="text-lg font-semibold mb-3">BIOGRAPHY</h3>
-								<div>
-									<h4 className="text-sm font-medium text-primary mb-1">BIO</h4>
-									<p className="text-sm">{woman.bio}</p>
-								</div>
+								<h4 className="text-sm font-medium text-primary mb-1">BIO</h4>
+								<p className="text-sm">{woman.bio}</p>
 							</div>
 						)}
 
 						<Separator />
 
-						{/* Memberships grid */}
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-							{woman.memberships && woman.memberships.length > 0 && (
-								<div>
+						{/* Memberships card */}
+						{woman.memberships && woman.memberships.length > 0 && (
+							<Card className="border-primary/30">
+								<CardContent className="pt-4">
 									<h4 className="text-sm font-medium text-primary mb-2">
 										MEMBERSHIPS
 									</h4>
@@ -299,16 +314,16 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 										{woman.memberships.map((membership) => (
 											<Badge
 												key={membership}
-												variant="outline"
-												className="text-xs"
+												variant="secondary"
+												className="text-xs bg-primary/10 text-primary border-primary/30"
 											>
 												{membership}
 											</Badge>
 										))}
 									</div>
-								</div>
-							)}
-						</div>
+								</CardContent>
+							</Card>
+						)}
 					</div>
 				</div>
 			</DialogContent>

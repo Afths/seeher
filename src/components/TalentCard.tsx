@@ -9,7 +9,7 @@
  * - Name, job title, and company
  * - Short bio (truncated to 3 lines)
  * - Areas of expertise badges (shows first 3, then "+X more")
- * - Languages display (shows first 3)
+ * - Languages display (shows first 3, then "+X more")
  * - LinkedIn link (if available)
  * - Hover effects for better interactivity
  * - Click handler to open full profile modal
@@ -179,21 +179,24 @@ export function TalentCard({
 							<p className="text-sm text-foreground/80 mb-3 line-clamp-3">{bio}</p>
 						)}
 
-						{/* Languages display - shows first 3 */}
-						<div className="flex items-center justify-between">
-							{languages.length > 0 && (
-								<div className="flex gap-1">
-									{languages.slice(0, 3).map((lang, index) => (
-										<span
-											key={index}
-											className="text-xs bg-accent px-2 py-1 rounded-full"
-										>
-											{lang}
-										</span>
-									))}
-								</div>
-							)}
-						</div>
+						{/* Languages display - shows first 3, then "+X" */}
+						{languages.length > 0 && (
+							<div className="flex flex-wrap gap-1">
+								{languages.slice(0, 3).map((lang, index) => (
+									<span
+										key={index}
+										className="text-xs bg-accent px-2 py-1 rounded-full"
+									>
+										{lang}
+									</span>
+								))}
+								{languages.length > 3 && (
+									<span className="text-xs bg-accent px-2 py-1 rounded-full">
+										+{languages.length - 3}
+									</span>
+								)}
+							</div>
+						)}
 					</div>
 				</div>
 			</CardContent>
