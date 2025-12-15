@@ -212,7 +212,7 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 						)}
 
 						{/* Contact Information card */}
-						{(woman.email || woman.contact_number || socialMediaLink) && (
+						{(woman.email || (woman.contact_number && user) || socialMediaLink) && (
 							<Card className="border-primary/30">
 								<CardContent className="pt-4 space-y-3">
 									<h4 className="text-sm font-medium text-primary">
@@ -233,7 +233,7 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 											</div>
 										)}
 
-										{woman.contact_number && (
+										{woman.contact_number && user && (
 											<div>
 												<h5 className="text-xs font-medium text-primary">
 													PHONE
