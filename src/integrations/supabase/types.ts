@@ -104,6 +104,7 @@ export type Database = {
           email: string
           id: string
           interested_in: string[]
+          interested_in_description: string | null
           job_title: string
           languages: string[]
           memberships: string[]
@@ -122,6 +123,7 @@ export type Database = {
           email?: string
           id?: string
           interested_in: string[]
+          interested_in_description?: string | null
           job_title?: string
           languages: string[]
           memberships: string[]
@@ -140,6 +142,7 @@ export type Database = {
           email?: string
           id?: string
           interested_in?: string[]
+          interested_in_description?: string | null
           job_title?: string
           languages?: string[]
           memberships?: string[]

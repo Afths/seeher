@@ -42,6 +42,7 @@ interface ProfileFormData {
 	contactNumber: string;
 	socialMedia: string;
 	interestedIn: string[];
+	interestedInDescription: string;
 	profilePicture: string;
 	consent: boolean; // Frontend validation only, not stored in database
 }
@@ -62,6 +63,7 @@ export function useProfileSubmission() {
 		contactNumber: "",
 		socialMedia: "",
 		interestedIn: [],
+		interestedInDescription: "",
 		profilePicture: "",
 		consent: false,
 	});
@@ -167,6 +169,7 @@ export function useProfileSubmission() {
 					.filter((item) => item.trim() !== "")
 					.map((item) => sanitizeInput(item)),
 				interested_in: formData.interestedIn,
+				interested_in_description: sanitizeInput(formData.interestedInDescription),
 			};
 
 			/**
@@ -203,6 +206,7 @@ export function useProfileSubmission() {
 				contact_number: validatedData.contact_number ?? null,
 				social_media: validatedData.social_media ?? null,
 				interested_in: validatedData.interested_in,
+				interested_in_description: validatedData.interested_in_description ?? null,
 				profile_picture: profilePictureUrl || null,
 				languages: validatedData.languages,
 				areas_of_expertise: validatedData.areas_of_expertise,
@@ -332,6 +336,7 @@ export function useProfileSubmission() {
 			contactNumber: "",
 			socialMedia: "",
 			interestedIn: [],
+			interestedInDescription: "",
 			profilePicture: "",
 			consent: false,
 		});

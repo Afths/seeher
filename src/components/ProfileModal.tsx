@@ -103,44 +103,21 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 							</AvatarFallback>
 						</Avatar>
 
-						{/* Basic information card */}
-						<Card className="border-primary/30">
-							<CardContent className="pt-4 space-y-2">
-								{woman.job_title && (
-									<div>
-										<h4 className="text-sm font-medium text-primary">
-											JOB TITLE
-										</h4>
-										<p className="text-sm">{woman.job_title}</p>
-									</div>
-								)}
-
-								{woman.company_name && (
-									<div>
-										<h4 className="text-sm font-medium text-primary">
-											COMPANY
-										</h4>
-										<p className="text-sm">{woman.company_name}</p>
-									</div>
-								)}
-							</CardContent>
-						</Card>
-
-						{/* Interested In card */}
-						{woman.interested_in && woman.interested_in.length > 0 && (
+						{/* Languages card */}
+						{woman.languages && woman.languages.length > 0 && (
 							<Card className="border-primary/30">
 								<CardContent className="pt-4">
 									<h4 className="text-sm font-medium text-primary mb-2">
-										INTERESTED IN
+										LANGUAGES
 									</h4>
 									<div className="flex flex-wrap gap-1">
-										{woman.interested_in.map((interest) => (
+										{woman.languages.map((language) => (
 											<Badge
-												key={interest}
+												key={language}
 												variant="secondary"
 												className="text-xs bg-primary/10 text-primary border-primary/30"
 											>
-												{interest}
+												{language}
 											</Badge>
 										))}
 									</div>
@@ -212,21 +189,21 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 							</Card>
 						)}
 
-						{/* Languages card */}
-						{woman.languages && woman.languages.length > 0 && (
+						{/* Memberships card */}
+						{woman.memberships && woman.memberships.length > 0 && (
 							<Card className="border-primary/30">
 								<CardContent className="pt-4">
 									<h4 className="text-sm font-medium text-primary mb-2">
-										LANGUAGES
+										MEMBERSHIPS
 									</h4>
 									<div className="flex flex-wrap gap-1">
-										{woman.languages.map((language) => (
+										{woman.memberships.map((membership) => (
 											<Badge
-												key={language}
+												key={membership}
 												variant="secondary"
 												className="text-xs bg-primary/10 text-primary border-primary/30"
 											>
-												{language}
+												{membership}
 											</Badge>
 										))}
 									</div>
@@ -242,19 +219,19 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 										CONTACT INFORMATION
 									</h4>
 									<div className="space-y-2">
-									{woman.email && (
-										<div>
-											<h5 className="text-xs font-medium text-primary">
-												EMAIL
-											</h5>
-											<a
-												href={`mailto:${woman.email}`}
-												className="text-xs text-primary hover:underline"
-											>
-												{woman.email}
-											</a>
-										</div>
-									)}
+										{woman.email && (
+											<div>
+												<h5 className="text-xs font-medium text-primary">
+													EMAIL
+												</h5>
+												<a
+													href={`mailto:${woman.email}`}
+													className="text-xs text-primary hover:underline"
+												>
+													{woman.email}
+												</a>
+											</div>
+										)}
 
 										{woman.contact_number && (
 											<div>
@@ -293,34 +270,64 @@ export function ProfileModal({ isOpen, onClose, woman, onEditClick }: ProfileMod
 
 					{/* RIGHT COLUMNS - Detailed Information */}
 					<div className="md:col-span-2 space-y-6">
+						{/* Job Title & Company card */}
+						<Card className="border-primary/30">
+							<CardContent className="pt-4 space-y-2">
+								{woman.job_title && (
+									<div>
+										<h4 className="text-sm font-medium text-primary">
+											JOB TITLE
+										</h4>
+										<p className="text-sm">{woman.job_title}</p>
+									</div>
+								)}
+
+								{woman.company_name && (
+									<div>
+										<h4 className="text-sm font-medium text-primary">
+											COMPANY
+										</h4>
+										<p className="text-sm">{woman.company_name}</p>
+									</div>
+								)}
+							</CardContent>
+						</Card>
+
 						{/* Biography section */}
 						{woman.bio && (
-							<div>
-								<h4 className="text-sm font-medium text-primary mb-1">BIO</h4>
-								<p className="text-sm">{woman.bio}</p>
-							</div>
+							<Card className="border-primary/30">
+								<CardContent className="pt-4">
+									<h4 className="text-sm font-medium text-primary mb-1">BIO</h4>
+									<p className="text-sm">{woman.bio}</p>
+								</CardContent>
+							</Card>
 						)}
 
-						<Separator />
-
-						{/* Memberships card */}
-						{woman.memberships && woman.memberships.length > 0 && (
+						{/* Interested In card */}
+						{woman.interested_in && woman.interested_in.length > 0 && (
 							<Card className="border-primary/30">
 								<CardContent className="pt-4">
 									<h4 className="text-sm font-medium text-primary mb-2">
-										MEMBERSHIPS
+										INTERESTED IN
 									</h4>
-									<div className="flex flex-wrap gap-1">
-										{woman.memberships.map((membership) => (
+									<div className="flex flex-wrap gap-1 mb-3">
+										{woman.interested_in.map((interest) => (
 											<Badge
-												key={membership}
+												key={interest}
 												variant="secondary"
 												className="text-xs bg-primary/10 text-primary border-primary/30"
 											>
-												{membership}
+												{interest}
 											</Badge>
 										))}
 									</div>
+									{woman.interested_in_description && (
+										<div className="mt-3 pt-3 border-t border-primary/20">
+											<p className="text-sm text-muted-foreground">
+												{woman.interested_in_description}
+											</p>
+										</div>
+									)}
 								</CardContent>
 							</Card>
 						)}

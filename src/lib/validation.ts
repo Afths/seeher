@@ -54,6 +54,11 @@ export const profileSubmissionSchema = z.object({
 		.array(z.enum(["Speaker", "Panelist", "Board Member"]))
 		.min(1, "At least one role must be selected"),
 
+	interested_in_description: z
+		.string()
+		.max(1000, "Description must be less than 1000 characters")
+		.optional(),
+
 	social_media: z.string().url("Invalid URL format").optional(),
 });
 

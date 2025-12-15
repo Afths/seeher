@@ -414,6 +414,16 @@ export default function AdminDashboard() {
 										</div>
 									</div>
 
+									{/* Interest Description - only shown if description exists */}
+									{submission.interested_in_description && (
+										<div className="mb-4">
+											<p className="text-sm font-medium mb-1">Interest Details:</p>
+											<p className="text-sm text-muted-foreground">
+												{submission.interested_in_description}
+											</p>
+										</div>
+									)}
+
 									{/* Bio section - only shown if bio exists */}
 									{submission.bio && (
 										<div className="mb-4">

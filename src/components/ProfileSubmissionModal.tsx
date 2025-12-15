@@ -211,7 +211,9 @@ export function ProfileSubmissionModal({
 								className={errors.company_name ? "border-destructive" : ""}
 							/>
 							{errors.company_name && (
-								<p className="text-sm text-destructive mt-1">{errors.company_name}</p>
+								<p className="text-sm text-destructive mt-1">
+									{errors.company_name}
+								</p>
 							)}
 						</div>
 					</div>
@@ -321,6 +323,37 @@ export function ProfileSubmissionModal({
 						{errors.interested_in && (
 							<p className="text-sm text-destructive mt-1">{errors.interested_in}</p>
 						)}
+
+						{/* Interest Description - Optional textarea */}
+						<div className="mt-4">
+							<Label htmlFor="interestedInDescription">
+								Talk more about your interests
+							</Label>
+							<p className="text-xs text-muted-foreground mb-2">
+								Share what you'd like to talk about, conferences you're interested
+								in, your beliefs, travel willingness, or any other relevant details.
+							</p>
+							<Textarea
+								id="interestedInDescription"
+								value={formData.interestedInDescription}
+								onChange={(e) =>
+									setFormData({
+										...formData,
+										interestedInDescription: e.target.value,
+									})
+								}
+								placeholder="I'm passionate about women's leadership in tech and enjoy speaking at international conferences."
+								rows={4}
+								className={
+									errors.interested_in_description ? "border-destructive" : ""
+								}
+							/>
+							{errors.interested_in_description && (
+								<p className="text-sm text-destructive mt-1">
+									{errors.interested_in_description}
+								</p>
+							)}
+						</div>
 					</div>
 
 					{/* Privacy Consent - Required (frontend validation only, not stored in database) */}

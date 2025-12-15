@@ -401,6 +401,34 @@ export function ProfileEditModal({
 						{errors.interested_in && (
 							<p className="text-sm text-destructive mt-1">{errors.interested_in}</p>
 						)}
+
+						{/* Interest Description - Optional textarea */}
+						<div className="mt-4">
+							<Label htmlFor="edit-interestedInDescription">
+								Tell us more about your interests (optional)
+							</Label>
+							<p className="text-xs text-muted-foreground mb-2">
+								Share what you'd like to talk about, conferences you're interested in, your beliefs, travel willingness, or any other relevant details.
+							</p>
+							<Textarea
+								id="edit-interestedInDescription"
+								value={formData.interestedInDescription}
+								onChange={(e) =>
+									setFormData({
+										...formData,
+										interestedInDescription: e.target.value,
+									})
+								}
+								placeholder="E.g., I'm passionate about women's leadership in tech, enjoy speaking at international conferences, and am willing to travel..."
+								rows={4}
+								className={errors.interested_in_description ? "border-destructive" : ""}
+							/>
+							{errors.interested_in_description && (
+								<p className="text-sm text-destructive mt-1">
+									{errors.interested_in_description}
+								</p>
+							)}
+						</div>
 					</div>
 
 					{/* Form Actions */}

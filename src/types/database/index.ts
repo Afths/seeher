@@ -29,6 +29,7 @@ export type WomanPublic = Pick<
 	| "languages"
 	| "memberships"
 	| "interested_in"
+	| "interested_in_description"
 	| "created_at"
 	| "status"
 >;

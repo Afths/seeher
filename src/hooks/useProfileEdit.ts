@@ -31,6 +31,7 @@ interface ProfileFormData {
 	contactNumber: string;
 	socialMedia: string;
 	interestedIn: string[];
+	interestedInDescription: string;
 	profilePicture: string;
 }
 
@@ -52,6 +53,7 @@ export function useProfileEdit() {
 		contactNumber: "",
 		socialMedia: "",
 		interestedIn: [],
+		interestedInDescription: "",
 		profilePicture: "",
 	});
 
@@ -105,6 +107,7 @@ export function useProfileEdit() {
 				socialMedia: data.social_media || "",
 				contactNumber: data.contact_number || "",
 				interestedIn: Array.isArray(data.interested_in) ? data.interested_in : [],
+				interestedInDescription: data.interested_in_description || "",
 				profilePicture: data.profile_picture || "",
 			});
 
@@ -202,6 +205,7 @@ export function useProfileEdit() {
 					.filter((item) => item.trim() !== "")
 					.map((item) => sanitizeInput(item)),
 				interested_in: formData.interestedIn,
+				interested_in_description: sanitizeInput(formData.interestedInDescription),
 			};
 
 			/**
@@ -232,6 +236,7 @@ export function useProfileEdit() {
 					contact_number: validatedData.contact_number ?? null,
 					social_media: validatedData.social_media ?? null,
 					interested_in: validatedData.interested_in,
+					interested_in_description: validatedData.interested_in_description ?? null,
 					profile_picture: profilePictureUrl || null,
 					languages: validatedData.languages,
 					areas_of_expertise: validatedData.areas_of_expertise,
@@ -282,6 +287,7 @@ export function useProfileEdit() {
 			contactNumber: "",
 			socialMedia: "",
 			interestedIn: [],
+			interestedInDescription: "",
 			profilePicture: "",
 		});
 		setLanguages([]);
